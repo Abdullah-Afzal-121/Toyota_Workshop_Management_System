@@ -1,0 +1,12 @@
+{
+  "name": "toyota-workshop-tracker",
+  "version": "1.0.0",
+  "description": "Toyota Workshop Tracker – MERN monorepo",
+  "private": true,
+  "scripts": {
+    "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",
+    "dev:backend":  "npm run dev  --prefix backend",
+    "dev:frontend": "npm run dev  --prefix frontend",
+    "start:backend": "npm start   --prefix backend"
+  }
+}

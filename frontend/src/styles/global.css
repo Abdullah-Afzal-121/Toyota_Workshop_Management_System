@@ -1,0 +1,245 @@
+/* ═══════════════════════════════════════════════════════════
+   Toyota Workshop Tracker — Global Design System
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --tm-red:        #EB0A1E;
+  --tm-red-dark:   #C4081A;
+  --tm-red-light:  #FFF0F1;
+  --bg-page:       #F4F7FE;
+  --bg-card:       #FFFFFF;
+  --text-primary:  #1E293B;
+  --text-muted:    #64748B;
+  --text-light:    #94A3B8;
+  --border:        #E2E8F0;
+  --shadow-sm:     0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-md:     0 4px 16px rgba(0,0,0,0.08);
+  --shadow-lg:     0 8px 32px rgba(0,0,0,0.10);
+  --radius:        12px;
+  --radius-lg:     16px;
+  --radius-sm:     8px;
+  --radius-pill:   999px;
+}
+
+/* ── Base ────────────────────────────────────────────────── */
+body {
+  background: var(--bg-page);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Cards ───────────────────────────────────────────────── */
+.tw-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border);
+}
+
+.tw-card-hover {
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.tw-card-hover:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+/* ── Form controls ───────────────────────────────────────── */
+.tw-input {
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 0.65rem 1rem !important;
+  font-size: 0.9rem !important;
+  color: var(--text-primary) !important;
+  background: #fff !important;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.tw-input:focus {
+  border-color: var(--tm-red) !important;
+  box-shadow: 0 0 0 3px rgba(235, 10, 30, 0.08) !important;
+  outline: none !important;
+}
+.tw-input::placeholder { color: var(--text-light) !important; }
+
+/* ── Buttons ─────────────────────────────────────────────── */
+.tw-btn-primary {
+  background: var(--tm-red) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 0.6rem 1.4rem !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+}
+.tw-btn-primary:hover:not(:disabled) {
+  background: var(--tm-red-dark) !important;
+  box-shadow: 0 4px 12px rgba(235,10,30,0.3) !important;
+  transform: translateY(-1px);
+}
+.tw-btn-primary:active { transform: translateY(0) !important; }
+.tw-btn-primary:disabled { opacity: 0.65 !important; }
+
+.tw-btn-outline {
+  background: transparent !important;
+  color: var(--tm-red) !important;
+  border: 1.5px solid var(--tm-red) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 0.55rem 1.2rem !important;
+  font-weight: 600 !important;
+  font-size: 0.875rem !important;
+  transition: all 0.15s;
+}
+.tw-btn-outline:hover:not(:disabled) {
+  background: var(--tm-red) !important;
+  color: #fff !important;
+}
+
+.tw-btn-ghost {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  border: 1.5px solid var(--border) !important;
+  border-radius: var(--radius-sm) !important;
+  padding: 0.55rem 1.1rem !important;
+  font-size: 0.875rem !important;
+  transition: all 0.15s;
+}
+.tw-btn-ghost:hover { background: var(--bg-page) !important; color: var(--text-primary) !important; }
+
+/* ── Status Badges ───────────────────────────────────────── */
+.tw-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+.tw-badge-green  { background: #DCFCE7; color: #15803D; }
+.tw-badge-orange { background: #FEF3C7; color: #B45309; }
+.tw-badge-blue   { background: #DBEAFE; color: #1D4ED8; }
+.tw-badge-gray   { background: #F1F5F9; color: #475569; }
+.tw-badge-red    { background: #FEE2E2; color: #B91C1C; }
+
+/* ── Table ───────────────────────────────────────────────── */
+.tw-table { border-collapse: collapse; width: 100%; }
+.tw-table th {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  padding: 0.75rem 1.25rem;
+  background: #FAFBFC;
+  border-bottom: 1px solid var(--border);
+}
+.tw-table td {
+  font-size: 0.875rem;
+  padding: 0.9rem 1.25rem;
+  border-bottom: 1px solid #F1F5F9;
+  color: var(--text-primary);
+  vertical-align: middle;
+}
+.tw-table tr:last-child td { border-bottom: none; }
+.tw-table tbody tr { transition: background 0.1s; }
+.tw-table tbody tr:hover { background: #FAFBFE; }
+
+/* ── Header ──────────────────────────────────────────────── */
+.tw-header {
+  background: #fff;
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  box-shadow: 0 1px 0 var(--border);
+}
+
+.tw-header-logo span {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.tw-nav-link {
+  padding: 0.4rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  text-decoration: none;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tw-nav-link:hover { background: var(--bg-page); color: var(--text-primary); }
+.tw-nav-link.active { background: var(--tm-red-light); color: var(--tm-red); font-weight: 600; }
+
+/* ── Stat Cards ──────────────────────────────────────────── */
+.tw-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* ── Progress bar ────────────────────────────────────────── */
+.tw-progress-bar {
+  height: 6px;
+  background: #E2E8F0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.tw-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--tm-red);
+  transition: width 0.5s ease;
+}
+.tw-progress-fill.green  { background: #22C55E; }
+.tw-progress-fill.orange { background: #F59E0B; }
+
+/* ── Search input ────────────────────────────────────────── */
+.tw-search-wrap { position: relative; display: flex; align-items: stretch; }
+.tw-search-wrap input { flex: 1; padding-left: 2.4rem !important; }
+.tw-search-icon {
+  position: absolute;
+  left: 0.8rem;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-light);
+}
+
+/* ── Section divider label ───────────────────────────────── */
+.tw-section-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+/* ── Page wrapper ────────────────────────────────────────── */
+.tw-page { min-height: calc(100vh - 64px); background: var(--bg-page); padding: 2rem; }
+
+/* ── Modal overrides ─────────────────────────────────────── */
+.tw-modal .modal-content { border: none; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); }
+.tw-modal .modal-header  { border-bottom: 1px solid var(--border); padding: 1.25rem 1.5rem; }
+.tw-modal .modal-footer  { border-top: 1px solid var(--border); padding: 1rem 1.5rem; }
+
+/* ── Responsive helpers ──────────────────────────────────── */
+@media (max-width: 768px) {
+  .tw-page { padding: 1rem; }
+  .tw-header { padding: 0 1rem; }
+}
