@@ -61,13 +61,11 @@ app.use('/api/mechanic', require('./routes/mechanic'));
 // ── Root health-check ────────────────────────────────────────────────────────
 app.get('/', (_req, res) => res.json({ message: 'Toyota Workshop API is running 🚗' }));
 
-// ── Local development: spin up an HTTP server ────────────────────────────────
-if (process.env.NODE_ENV !== 'production') {
-  const PORT = process.env.PORT || 5000;
-  connectDB()
-    .then(() => server.listen(PORT, () => console.log(`🚀  Server running on http://localhost:${PORT}`)))
-    .catch((err) => { console.error('❌  DB connection error:', err.message); process.exit(1); });
-}
+// ── Start HTTP server (works for both local dev and Railway/production) ──────
+const PORT = process.env.PORT || 5000;
+connectDB()
+  .then(() => server.listen(PORT, () => console.log(`🚀  Server running on port ${PORT}`)))
+  .catch((err) => { console.error('❌  DB connection error:', err.message); process.exit(1); });
 
-// ── Export app for Vercel Serverless Functions ───────────────────────────────
+// ── Export app (kept for compatibility) ──────────────────────────────────────
 module.exports = app;
