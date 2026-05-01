@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import axios from 'axios'
 
-// Ensure Axios sends cookies automatically
+// Point all axios calls to the Railway backend in production
+// In dev, VITE_API_URL is not set so Vite proxy handles /api/* automatically
+axios.defaults.baseURL = import.meta.env.VITE_API_URL || ''
 axios.defaults.withCredentials = true
 
 // ── Context ───────────────────────────────────────────────────────────────────
