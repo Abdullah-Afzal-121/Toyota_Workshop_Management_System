@@ -10,6 +10,9 @@ require('dotenv').config();
 const app = express();
 const server = http.createServer(app);
 
+// Trust Render's reverse proxy (fixes express-rate-limit X-Forwarded-For error)
+app.set('trust proxy', 1);
+
 // In production, you must set CLIENT_ORIGIN correctly (e.g., https://yourfrontend.com)
 const clientOrigins = process.env.CLIENT_ORIGIN ? process.env.CLIENT_ORIGIN.split(',') : ['http://localhost:5173'];
 
