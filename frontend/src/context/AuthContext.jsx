@@ -1,10 +1,23 @@
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react'
 import axios from 'axios'
 
-// Point all axios calls to the Railway backend in production
-// In dev, VITE_API_URL is not set so Vite proxy handles /api/* automatically
+// Point all axios calls to the Render backend in production
 axios.defaults.baseURL = import.meta.env.VITE_API_URL || ''
-axios.defaults.withCredentials = true
+
+// ── Token helpers (localStorage — works in ALL browsers, no cookie issues) ────
+const TOKEN_KEY = 'tw_token'
+const USER_KEY  = 'tw_user'
+
+const saveToken = (token) => { if (token) localStorage.setItem(TOKEN_KEY, token) }
+const getToken  = ()      => localStorage.getItem(TOKEN_KEY)
+const clearToken = ()     => localStorage.removeItem(TOKEN_KEY)
+
+// ── Axios request interceptor — attach Bearer token to every request ──────────
+axios.interceptors.request.use((config) => {
+  const token = getToken()
+  if (token) config.headers['Authorization'] = `Bearer ${token}`
+  return config
+})
 
 // ── Context ───────────────────────────────────────────────────────────────────
 const AuthContext = createContext(null)
@@ -24,21 +37,32 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   const initialized = useRef(false)
 
-  // Rehydrate session from the API on mount (relies on HttpOnly cookies)
+  // Rehydrate session on mount — use stored token to verify with backend
   useEffect(() => {
     if (initialized.current) return
     initialized.current = true
 
-    axios.get('/api/auth/me')
-      .then(({ data }) => {
-        setUser(data.user)
-        localStorage.setItem('tw_user', JSON.stringify(data.user))
-      })
-      .catch(() => {
-        localStorage.removeItem('tw_user')
-        setUser(null)
-      })
-      .finally(() => setLoading(false))
+    const storedUser  = localStorage.getItem(USER_KEY)
+    const storedToken = getToken()
+
+    if (storedToken && storedUser) {
+      // Optimistically restore user from localStorage, then verify with backend
+      setUser(JSON.parse(storedUser))
+      axios.get('/api/auth/me')
+        .then(({ data }) => {
+          setUser(data.user)
+          localStorage.setItem(USER_KEY, JSON.stringify(data.user))
+        })
+        .catch(() => {
+          // Token invalid/expired — clear everything
+          clearToken()
+          localStorage.removeItem(USER_KEY)
+          setUser(null)
+        })
+        .finally(() => setLoading(false))
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   // -- Axios Interceptor for 401 Auto-Logout -------------------------------------
@@ -47,9 +71,9 @@ export function AuthProvider({ children }) {
       response => response,
       error => {
         if (error.response && error.response.status === 401) {
-          // If token expired or invalid, auto logout
-          clear()
-          // Optionally, redirect to login page if we aren't handling it via ProtectedRoute
+          clearToken()
+          localStorage.removeItem(USER_KEY)
+          setUser(null)
         }
         return Promise.reject(error)
       }
@@ -58,49 +82,49 @@ export function AuthProvider({ children }) {
   }, [])
 
   // -- Persist helpers -----------------------------------------------------------
-  const persist = (userData) => {
-    localStorage.setItem('tw_user',  JSON.stringify(userData))
+  const persist = (userData, token) => {
+    localStorage.setItem(USER_KEY, JSON.stringify(userData))
+    saveToken(token)
     setUser(userData)
   }
 
   const clear = () => {
-    localStorage.removeItem('tw_user')
+    localStorage.removeItem(USER_KEY)
+    clearToken()
     setUser(null)
   }
 
   // -- Login (Customer + Mechanic only) -----------------------------------------
   const login = useCallback(async (email, password) => {
     const { data } = await axios.post('/api/auth/login', { email, password })
-    persist(data.user)
+    persist(data.user, data.token)
     return data.user
   }, [])
 
   // -- Admin Login (Admin only) --------------------------------------------------
   const adminLogin = useCallback(async (email, password) => {
     const { data } = await axios.post('/api/auth/admin-login', { email, password })
-    persist(data.user)
+    persist(data.user, data.token)
     return data.user
   }, [])
 
   // -- Register (Customer only) --------------------------------------------------
   const register = useCallback(async (name, email, password) => {
     const { data } = await axios.post('/api/auth/register', { name, email, password })
-    persist(data.user)
+    persist(data.user, data.token)
     return data.user
   }, [])
 
   // -- Google Login (Customer only) ---------------------------------------------
   const googleLogin = useCallback(async (credential) => {
     const { data } = await axios.post('/api/auth/google', { credential })
-    persist(data.user)
+    persist(data.user, data.token)
     return data.user
   }, [])
 
   // -- Logout --------------------------------------------------------------------
   const logout = useCallback(async () => {
-    try {
-      await axios.post('/api/auth/logout')
-    } catch (e) { /* ignore */ }
+    try { await axios.post('/api/auth/logout') } catch (e) { /* ignore */ }
     clear()
   }, [])
 
