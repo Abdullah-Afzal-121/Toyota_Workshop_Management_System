@@ -22,12 +22,17 @@
 }
 
 /* ── Base ────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
 body {
   background: var(--bg-page);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
+
+img { max-width: 100%; }
 
 /* ── Cards ───────────────────────────────────────────────── */
 .tw-card {
@@ -37,13 +42,8 @@ body {
   border: 1px solid var(--border);
 }
 
-.tw-card-hover {
-  transition: box-shadow 0.2s, transform 0.2s;
-}
-.tw-card-hover:hover {
-  box-shadow: var(--shadow-md);
-  transform: translateY(-1px);
-}
+.tw-card-hover { transition: box-shadow 0.2s, transform 0.2s; }
+.tw-card-hover:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 
 /* ── Form controls ───────────────────────────────────────── */
 .tw-input {
@@ -54,6 +54,8 @@ body {
   color: var(--text-primary) !important;
   background: #fff !important;
   transition: border-color 0.15s, box-shadow 0.15s;
+  width: 100%;
+  max-width: 100%;
 }
 .tw-input:focus {
   border-color: var(--tm-red) !important;
@@ -72,6 +74,7 @@ body {
   font-weight: 600 !important;
   font-size: 0.875rem !important;
   transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  white-space: nowrap;
 }
 .tw-btn-primary:hover:not(:disabled) {
   background: var(--tm-red-dark) !important;
@@ -90,6 +93,7 @@ body {
   font-weight: 600 !important;
   font-size: 0.875rem !important;
   transition: all 0.15s;
+  white-space: nowrap;
 }
 .tw-btn-outline:hover:not(:disabled) {
   background: var(--tm-red) !important;
@@ -117,6 +121,7 @@ body {
   font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.02em;
+  white-space: nowrap;
 }
 .tw-badge-green  { background: #DCFCE7; color: #15803D; }
 .tw-badge-orange { background: #FEF3C7; color: #B45309; }
@@ -125,7 +130,13 @@ body {
 .tw-badge-red    { background: #FEE2E2; color: #B91C1C; }
 
 /* ── Table ───────────────────────────────────────────────── */
-.tw-table { border-collapse: collapse; width: 100%; }
+.tw-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius);
+}
+.tw-table { border-collapse: collapse; width: 100%; min-width: 560px; }
 .tw-table th {
   font-size: 0.72rem;
   font-weight: 600;
@@ -135,6 +146,7 @@ body {
   padding: 0.75rem 1.25rem;
   background: #FAFBFC;
   border-bottom: 1px solid var(--border);
+  white-space: nowrap;
 }
 .tw-table td {
   font-size: 0.875rem;
@@ -160,7 +172,6 @@ body {
   z-index: 1000;
   box-shadow: 0 1px 0 var(--border);
 }
-
 .tw-header-logo span {
   font-size: 1rem;
   font-weight: 700;
@@ -178,6 +189,7 @@ body {
   display: flex;
   align-items: center;
   gap: 6px;
+  white-space: nowrap;
 }
 .tw-nav-link:hover { background: var(--bg-page); color: var(--text-primary); }
 .tw-nav-link.active { background: var(--tm-red-light); color: var(--tm-red); font-weight: 600; }
@@ -191,6 +203,21 @@ body {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+/* ── Stat grid (used in admin/mechanic panels) ───────────── */
+.tw-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* ── Panel toolbar (search + action buttons row) ─────────── */
+.tw-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 /* ── Progress bar ────────────────────────────────────────── */
@@ -238,8 +265,163 @@ body {
 .tw-modal .modal-header  { border-bottom: 1px solid var(--border); padding: 1.25rem 1.5rem; }
 .tw-modal .modal-footer  { border-top: 1px solid var(--border); padding: 1rem 1.5rem; }
 
-/* ── Responsive helpers ──────────────────────────────────── */
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE — Tablet  ≤ 768 px
+   ══════════════════════════════════════════════════════════ */
 @media (max-width: 768px) {
-  .tw-page { padding: 1rem; }
+
+  /* Page padding */
+  .tw-page { padding: 0.875rem; }
   .tw-header { padding: 0 1rem; }
+
+  /* All inline tables — horizontal scroll */
+  .tw-table-wrap,
+  .table-responsive { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* Bootstrap tables override */
+  .table { min-width: 480px; }
+
+  /* Modal */
+  .modal-dialog { margin: 0.75rem; max-width: calc(100% - 1.5rem) !important; }
+  .modal-content { border-radius: var(--radius) !important; }
+  .tw-modal .modal-header,
+  .tw-modal .modal-footer { padding: 1rem; }
+  .modal-body { padding: 1rem !important; }
+
+  /* Toolbar wraps */
+  .tw-toolbar { gap: 0.5rem; }
+
+  /* Stat grid — 2 columns on tablet */
+  .tw-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+
+  /* Table compact */
+  .tw-table th { font-size: 0.68rem; padding: 0.65rem 0.85rem; }
+  .tw-table td { font-size: 0.82rem; padding: 0.75rem 0.85rem; }
+
+  /* Nav tabs — horizontal scroll (admin panel tabs) */
+  .nav-tabs, .nav-pills {
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+  .nav-tabs::-webkit-scrollbar,
+  .nav-pills::-webkit-scrollbar { display: none; }
+  .nav-tabs .nav-item,
+  .nav-pills .nav-item { flex-shrink: 0; }
+  .nav-link { white-space: nowrap; }
+
+  /* Badges on mobile */
+  .tw-badge { font-size: 0.68rem; padding: 3px 8px; }
+
+  /* Admin panel top bar */
+  .admin-topbar {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 0.75rem !important;
+  }
+
+  /* Hide the large desktop hero card panel */
+  .hero-right-panel { display: none !important; }
 }
+
+/* ══════════════════════════════════════════════════════════
+   RESPONSIVE — Mobile  ≤ 480 px
+   ══════════════════════════════════════════════════════════ */
+@media (max-width: 480px) {
+
+  /* Page padding */
+  .tw-page { padding: 0.75rem; }
+
+  /* Stat grid — single column */
+  .tw-stats-grid { grid-template-columns: 1fr; }
+
+  /* Button sizing */
+  .tw-btn-primary,
+  .tw-btn-outline,
+  .tw-btn-ghost { font-size: 0.82rem !important; padding: 0.55rem 1rem !important; }
+
+  /* Header shrinks slightly */
+  .tw-header { height: 58px; }
+  .tw-page { min-height: calc(100vh - 58px); }
+
+  /* Modals — full width on very small screens */
+  .modal-dialog {
+    margin: 0.5rem !important;
+    max-width: calc(100% - 1rem) !important;
+  }
+
+  /* Table cells more compact */
+  .tw-table th { padding: 0.5rem 0.65rem; font-size: 0.65rem; }
+  .tw-table td { padding: 0.6rem 0.65rem; font-size: 0.8rem; }
+
+  /* Hide low-priority columns on very small screens */
+  .tw-col-hide-xs { display: none !important; }
+
+  /* Badge */
+  .tw-badge { font-size: 0.65rem; padding: 2px 7px; }
+
+  /* Action button row — stack vertically */
+  .tw-action-row {
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  .tw-action-row button,
+  .tw-action-row a {
+    width: 100% !important;
+    text-align: center !important;
+    justify-content: center !important;
+  }
+
+  /* Typography */
+  h1 { font-size: clamp(1.5rem, 6vw, 2rem) !important; }
+  h2 { font-size: clamp(1.2rem, 5vw, 1.6rem) !important; }
+
+  /* Floating hero decorative cards — hide on small phones */
+  .hero-float-card { display: none !important; }
+
+  /* Tab nav — smaller text */
+  .nav-link { font-size: 0.8rem !important; padding: 0.4rem 0.65rem !important; }
+
+  /* Form labels */
+  label { font-size: 0.82rem !important; }
+
+  /* Search bar full width */
+  .tw-search-wrap { width: 100% !important; }
+  .tw-search-wrap input { width: 100% !important; }
+
+  /* Card compact */
+  .tw-card { padding: 0.875rem !important; }
+}
+
+/* ══════════════════════════════════════════════════════════
+   UTILITY HELPERS
+   ══════════════════════════════════════════════════════════ */
+
+/* Scrollable container */
+.tw-scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+/* Text truncation */
+.tw-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+
+/* Gap helpers */
+.tw-gap-sm { gap: 0.5rem; }
+.tw-gap-md { gap: 1rem; }
+
+/* Responsive image */
+.tw-img-responsive { width: 100%; height: auto; display: block; }
+
+/* ── Animations ──────────────────────────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.8); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.tw-fade-in { animation: fadeIn 0.3s ease forwards; }
