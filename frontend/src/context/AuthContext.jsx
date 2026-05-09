@@ -22,14 +22,8 @@ axios.interceptors.request.use((config) => {
 // ── Context ───────────────────────────────────────────────────────────────────
 const AuthContext = createContext(null)
 
-// ── Role → home route mapping ─────────────────────────────────────────────────
-export const ROLE_HOME = {
-  admin:          '/admin',
-  mechanic:       '/mechanic',
-  customer:       '/track',
-  advisor:        '/advisor',
-  job_controller: '/jc',
-}
+// Re-export from constants for backward compatibility
+export { ROLE_HOME } from './constants.js'
 
 // ── Provider ──────────────────────────────────────────────────────────────────
 export function AuthProvider({ children }) {
@@ -108,9 +102,15 @@ export function AuthProvider({ children }) {
     return data.user
   }, [])
 
+  // -- Send OTP for Registration -------------------------------------------------
+  const sendOtp = useCallback(async (name, email) => {
+    const { data } = await axios.post('/api/auth/send-otp', { name, email })
+    return data
+  }, [])
+
   // -- Register (Customer only) --------------------------------------------------
-  const register = useCallback(async (name, email, password) => {
-    const { data } = await axios.post('/api/auth/register', { name, email, password })
+  const register = useCallback(async (name, email, password, otp) => {
+    const { data } = await axios.post('/api/auth/register', { name, email, password, otp })
     persist(data.user, data.token)
     return data.user
   }, [])
@@ -129,7 +129,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, adminLogin, register, googleLogin, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, adminLogin, sendOtp, register, googleLogin, logout }}>
       {children}
     </AuthContext.Provider>
   )

@@ -6,8 +6,9 @@ const jwt       = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const rateLimit = require('express-rate-limit');
 const User      = require('../models/User');
+const OTP       = require('../models/OTP');
 const { verifyToken } = require('../middleware/authMiddleware');
-const { sendPasswordResetEmail } = require('../utils/emailService');
+const { sendPasswordResetEmail, sendOTPEmail } = require('../utils/emailService');
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -47,26 +48,70 @@ const sendTokenResponse = (user, statusCode, res, message) => {
 
 const safeUser = (u) => ({ _id: u._id, name: u.name, email: u.email, role: u.role, avatar: u.avatar || null, createdAt: u.createdAt });
 
-// --- POST /api/auth/register -------------------------------------------------
-// Public - creates a CUSTOMER account only.
-router.post('/register', async (req, res) => {
+// --- POST /api/auth/send-otp ---------------------------------------------------
+// Public - generates and sends an OTP for registration
+router.post('/send-otp', async (req, res) => {
   try {
-    const { name, email, password } = req.body;
-    if (!name || !email || !password)
-      return res.status(400).json({ message: 'Name, email and password are required.' });
-    if (password.length < 6)
-      return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+    const { name, email } = req.body;
+    if (!name || !email)
+      return res.status(400).json({ message: 'Name and email are required to send OTP.' });
 
     const exists = await User.findOne({ email: email.trim().toLowerCase() });
     if (exists)
       return res.status(409).json({ message: 'An account with that email already exists.' });
 
+    // Generate 6-digit OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // Delete any existing OTPs for this email to prevent spam/confusion
+    await OTP.deleteMany({ email: email.trim().toLowerCase() });
+
+    // Save new OTP
+    await OTP.create({
+      email: email.trim().toLowerCase(),
+      otp: otpCode
+    });
+
+    // Send email
+    await sendOTPEmail(email.trim().toLowerCase(), name.trim(), otpCode);
+
+    res.json({ message: 'Verification code sent to your email.' });
+  } catch (err) {
+    console.error('[send-otp ERROR]', err);
+    res.status(500).json({ message: err.message || 'Failed to send OTP.' });
+  }
+});
+
+// --- POST /api/auth/register -------------------------------------------------
+// Public - creates a CUSTOMER account only, after OTP verification.
+router.post('/register', async (req, res) => {
+  try {
+    const { name, email, password, otp } = req.body;
+    if (!name || !email || !password || !otp)
+      return res.status(400).json({ message: 'Name, email, password, and OTP are required.' });
+    if (password.length < 6)
+      return res.status(400).json({ message: 'Password must be at least 6 characters.' });
+
+    const emailLower = email.trim().toLowerCase();
+
+    const exists = await User.findOne({ email: emailLower });
+    if (exists)
+      return res.status(409).json({ message: 'An account with that email already exists.' });
+
+    // Verify OTP
+    const otpRecord = await OTP.findOne({ email: emailLower, otp });
+    if (!otpRecord)
+      return res.status(400).json({ message: 'Invalid or expired verification code.' });
+
     const user = await User.create({
       name:     name.trim(),
-      email:    email.trim().toLowerCase(),
+      email:    emailLower,
       password,
       role:     'customer',
     });
+
+    // Delete OTP record since it's used
+    await OTP.deleteOne({ _id: otpRecord._id });
 
     sendTokenResponse(user, 201, res, 'Account created successfully.');
   } catch (err) {

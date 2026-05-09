@@ -66,25 +66,8 @@ export default function Header() {
           </nav>
         </div>
 
-        {/* ── RIGHT: Search + User ─────────────────────────────────────── */}
+        {/* ── RIGHT: User ─────────────────────────────────────── */}
         <div className="d-flex align-items-center gap-2">
-          {/* Search (desktop) */}
-          <div className="tw-search-wrap d-none d-lg-block">
-            <Search size={14} className="tw-search-icon" />
-            <input
-              className="tw-input"
-              placeholder="Search reg number…"
-              style={{ width: 200, fontSize: '0.82rem', padding: '0.4rem 0.8rem 0.4rem 2.2rem' }}
-            />
-          </div>
-
-          {/* Notification bell */}
-          <button
-            className="tw-btn-ghost d-flex align-items-center justify-content-center"
-            style={{ width: 36, height: 36, padding: 0, border: '1.5px solid #E2E8F0', borderRadius: 8 }}
-          >
-            <Bell size={15} />
-          </button>
 
           {/* User pill */}
           <div
@@ -120,63 +103,8 @@ export default function Header() {
             <LogOut size={14} />
             <span className="d-none d-sm-inline">Out</span>
           </button>
-
-          {/* Mobile hamburger */}
-          <button
-            className="d-md-none tw-btn-ghost"
-            style={{ height: 36, width: 36, padding: 0, borderRadius: 8 }}
-            onClick={() => setMobileOpen(!mobileOpen)}
-          >
-            <span style={{ fontSize: '1.1rem' }}>☰</span>
-          </button>
         </div>
       </header>
-
-      {/* ── Mobile nav drawer ─────────────────────────────────────────── */}
-      {mobileOpen && (
-        <div
-          className="d-md-none"
-          style={{
-            background: '#fff',
-            borderBottom: '1px solid #E2E8F0',
-            padding: '1rem',
-            position: 'sticky',
-            top: 64,
-            zIndex: 999,
-            boxShadow: '0 4px 16px rgba(0,0,0,0.08)',
-          }}
-        >
-          <div className="d-flex flex-column gap-1">
-            {(user.role === 'customer' || user.role === 'admin') && (
-              <NavLink
-                to="/track"
-                className={({ isActive }) => `tw-nav-link ${isActive ? 'active' : ''}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <Car size={15} /> Track My Car
-              </NavLink>
-            )}
-            {(user.role === 'mechanic' || user.role === 'admin') && (
-              <NavLink
-                to="/mechanic"
-                className={({ isActive }) => `tw-nav-link ${isActive ? 'active' : ''}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <Wrench size={15} /> Mechanic Panel
-              </NavLink>
-            )}
-            {user.role === 'admin' && (
-              <NavLink
-                to="/admin"
-                className={({ isActive }) => `tw-nav-link ${isActive ? 'active' : ''}`}
-                onClick={() => setMobileOpen(false)}
-              >
-                <ShieldCheck size={15} /> Dashboard
-              </NavLink>
-            )}
-          </div>
-        </div>
-      )}
     </>
   )
 }

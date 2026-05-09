@@ -1,4 +1,4 @@
-﻿import { useState } from 'react'
+import { useState } from 'react'
 import { useNavigate, useLocation, Navigate, Link } from 'react-router-dom'
 import { Eye, EyeOff, Loader2 } from 'lucide-react'
 import { GoogleLogin } from '@react-oauth/google'
@@ -8,12 +8,14 @@ import { useToast } from '../context/ToastContext'
 const GRAD = 'linear-gradient(135deg, #f5316f 0%, #eb0a1e 100%)'
 
 export default function Login() {
-  const { user, login, register, googleLogin } = useAuth()
+  const { user, login, sendOtp, register, googleLogin } = useAuth()
   const { toast }  = useToast()
   const navigate   = useNavigate()
   const location   = useLocation()
 
   const [mode, setMode]           = useState('signin')   // 'signin' | 'signup'
+  const [signupStep, setSignupStep] = useState(1)        // 1: Details, 2: OTP
+  const [otp, setOtp]             = useState('')
   const [inForm,  setInForm]       = useState({ email: '', password: '' })
   const [upForm,  setUpForm]       = useState({ name: '', email: '', password: '' })
   const [showInPw,  setShowInPw]   = useState(false)
@@ -43,7 +45,7 @@ export default function Login() {
     } finally { setLoading(false) }
   }
 
-  const handleSignUp = async (e) => {
+  const handleSignUpInit = async (e) => {
     e.preventDefault()
     if (!upForm.name || !upForm.email || !upForm.password) {
       toast.warning('Missing Fields', 'Please fill in all fields.')
@@ -55,11 +57,27 @@ export default function Login() {
     }
     setLoading(true)
     try {
-      const u = await register(upForm.name.trim(), upForm.email.trim(), upForm.password)
+      await sendOtp(upForm.name.trim(), upForm.email.trim())
+      toast.success('Code Sent!', `An OTP has been sent to ${upForm.email}.`)
+      setSignupStep(2)
+    } catch (err) {
+      toast.error('Error', err.response?.data?.message || 'Could not send verification code.')
+    } finally { setLoading(false) }
+  }
+
+  const handleSignUpFinal = async (e) => {
+    e.preventDefault()
+    if (!otp || otp.length !== 6) {
+      toast.warning('Invalid Code', 'Please enter the 6-digit verification code.')
+      return
+    }
+    setLoading(true)
+    try {
+      const u = await register(upForm.name.trim(), upForm.email.trim(), upForm.password, otp)
       toast.success('Account Created!', `Welcome, ${u.name}! You\'re now signed in.`)
       navigate(dest || ROLE_HOME[u.role] || '/', { replace: true })
     } catch (err) {
-      toast.error('Registration Failed', err.response?.data?.message || 'Could not create account.')
+      toast.error('Verification Failed', err.response?.data?.message || 'Invalid or expired code.')
     } finally { setLoading(false) }
   }
 
@@ -87,20 +105,10 @@ export default function Login() {
       fontFamily: 'inherit',
     }}>
 
-      <div style={{
-        position: 'relative',
-        overflow: 'hidden',
-        width: 'min(820px, 100%)',
-        minHeight: 540,
-        borderRadius: 20,
-        boxShadow: '0 24px 80px rgba(0,0,0,0.15)',
-        background: '#fff',
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr',
-      }}>
+      <div className={`login-split-container show-${mode}`}>
 
         {/* ── SIGN IN FORM (left half) ── */}
-        <div style={{
+        <div className="sign-in-panel" style={{
           padding: 'clamp(2rem,5vw,3rem) clamp(1.5rem,4vw,2.75rem)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           minHeight: 540,
@@ -187,61 +195,99 @@ export default function Login() {
         </div>
 
         {/* ── SIGN UP FORM (right half) ── */}
-        <div style={{
+        <div className="sign-up-panel" style={{
           padding: 'clamp(2rem,5vw,3rem) clamp(1.5rem,4vw,2.75rem)',
           display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
           minHeight: 540,
         }}>
           <h2 style={{ fontWeight: 800, fontSize: '1.75rem', color: '#0F172A', marginBottom: '1.25rem', letterSpacing: '-0.01em' }}>Create Account</h2>
 
-          <form onSubmit={handleSignUp} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            <input
-              type="text"
-              placeholder="Name"
-              value={upForm.name}
-              onChange={e => setUpForm(f => ({ ...f, name: e.target.value }))}
-              style={inputStyle}
-              onFocus={e => { e.target.style.borderColor = '#eb0a1e'; e.target.style.background = '#fff' }}
-              onBlur={e => { e.target.style.borderColor = 'transparent'; e.target.style.background = '#f0f2f5' }}
-              required
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              value={upForm.email}
-              onChange={e => setUpForm(f => ({ ...f, email: e.target.value }))}
-              style={inputStyle}
-              onFocus={e => { e.target.style.borderColor = '#eb0a1e'; e.target.style.background = '#fff' }}
-              onBlur={e => { e.target.style.borderColor = 'transparent'; e.target.style.background = '#f0f2f5' }}
-              required
-            />
-            <div style={{ position: 'relative' }}>
+          {signupStep === 1 ? (
+            <form onSubmit={handleSignUpInit} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <input
-                type={showUpPw ? 'text' : 'password'}
-                placeholder="Password"
-                value={upForm.password}
-                onChange={e => setUpForm(f => ({ ...f, password: e.target.value }))}
-                style={{ ...inputStyle, paddingRight: '2.6rem' }}
+                type="text"
+                placeholder="Name"
+                value={upForm.name}
+                onChange={e => setUpForm(f => ({ ...f, name: e.target.value }))}
+                style={inputStyle}
                 onFocus={e => { e.target.style.borderColor = '#eb0a1e'; e.target.style.background = '#fff' }}
                 onBlur={e => { e.target.style.borderColor = 'transparent'; e.target.style.background = '#f0f2f5' }}
                 required
               />
-              <button type="button" onClick={() => setShowUpPw(v => !v)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', display: 'flex', alignItems: 'center', padding: 0 }}>
-                {showUpPw ? <EyeOff size={15} /> : <Eye size={15} />}
-              </button>
-            </div>
+              <input
+                type="email"
+                placeholder="Email"
+                value={upForm.email}
+                onChange={e => setUpForm(f => ({ ...f, email: e.target.value }))}
+                style={inputStyle}
+                onFocus={e => { e.target.style.borderColor = '#eb0a1e'; e.target.style.background = '#fff' }}
+                onBlur={e => { e.target.style.borderColor = 'transparent'; e.target.style.background = '#f0f2f5' }}
+                required
+              />
+              <div style={{ position: 'relative' }}>
+                <input
+                  type={showUpPw ? 'text' : 'password'}
+                  placeholder="Password"
+                  value={upForm.password}
+                  onChange={e => setUpForm(f => ({ ...f, password: e.target.value }))}
+                  style={{ ...inputStyle, paddingRight: '2.6rem' }}
+                  onFocus={e => { e.target.style.borderColor = '#eb0a1e'; e.target.style.background = '#fff' }}
+                  onBlur={e => { e.target.style.borderColor = 'transparent'; e.target.style.background = '#f0f2f5' }}
+                  required
+                />
+                <button type="button" onClick={() => setShowUpPw(v => !v)} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8', display: 'flex', alignItems: 'center', padding: 0 }}>
+                  {showUpPw ? <EyeOff size={15} /> : <Eye size={15} />}
+                </button>
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              style={{ background: GRAD, border: 'none', borderRadius: 25, padding: '0.72rem', color: '#fff', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '0.1em', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: '0.25rem', boxShadow: '0 4px 14px rgba(235,10,30,0.35)', transition: 'opacity 0.15s' }}
-              onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.9' }}
-              onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
-            >
-              {loading && mode === 'signup' ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : null}
-              SIGN UP
-            </button>
-          </form>
+              <button
+                type="submit"
+                disabled={loading}
+                style={{ background: GRAD, border: 'none', borderRadius: 25, padding: '0.72rem', color: '#fff', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '0.1em', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: '0.25rem', boxShadow: '0 4px 14px rgba(235,10,30,0.35)', transition: 'opacity 0.15s' }}
+                onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.9' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+              >
+                {loading && mode === 'signup' && signupStep === 1 ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : null}
+                CONTINUE
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleSignUpFinal} style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+                <p style={{ color: '#475569', fontSize: '0.9rem', margin: 0 }}>
+                  We sent a code to <br /><strong style={{ color: '#0F172A' }}>{upForm.email}</strong>
+                </p>
+              </div>
+              <input
+                type="text"
+                placeholder="6-Digit OTP Code"
+                value={otp}
+                onChange={e => setOtp(e.target.value)}
+                maxLength={6}
+                style={{ ...inputStyle, textAlign: 'center', letterSpacing: '0.2em', fontSize: '1.25rem', fontWeight: 700 }}
+                onFocus={e => { e.target.style.borderColor = '#eb0a1e'; e.target.style.background = '#fff' }}
+                onBlur={e => { e.target.style.borderColor = 'transparent'; e.target.style.background = '#f0f2f5' }}
+                required
+              />
+
+              <button
+                type="submit"
+                disabled={loading}
+                style={{ background: GRAD, border: 'none', borderRadius: 25, padding: '0.72rem', color: '#fff', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '0.1em', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: '0.25rem', boxShadow: '0 4px 14px rgba(235,10,30,0.35)', transition: 'opacity 0.15s' }}
+                onMouseEnter={e => { if (!loading) e.currentTarget.style.opacity = '0.9' }}
+                onMouseLeave={e => { e.currentTarget.style.opacity = '1' }}
+              >
+                {loading && mode === 'signup' && signupStep === 2 ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : null}
+                VERIFY & SIGN UP
+              </button>
+              
+              <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+                <button type="button" onClick={() => setSignupStep(1)} style={{ background: 'none', border: 'none', color: '#94A3B8', fontSize: '0.85rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                  Back to Details
+                </button>
+              </div>
+            </form>
+          )}
 
           {/* Mobile-only toggle */}
           <p className="d-md-none" style={{ marginTop: '1.25rem', fontSize: '0.82rem', color: '#64748B', textAlign: 'center' }}>

@@ -1004,10 +1004,11 @@ export default function AdminDashboard() {
   const TH = ({ children }) => <th style={{ padding: '0.65rem 1rem', textAlign: 'left', fontSize: '0.68rem', fontWeight: 700, color: '#94A3B8', letterSpacing: '0.08em', whiteSpace: 'nowrap', background: '#F8FAFC' }}>{children}</th>
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#F4F7FE', fontFamily: 'inherit' }}>
+    <div className="admin-layout-container">
 
       {/* ═══ SIDEBAR ══════════════════════════════════════════════════════ */}
-      <aside style={{ width: sidebarOpen ? 240 : 72, background: SIDEBAR, flexShrink: 0, display: 'flex', flexDirection: 'column', transition: 'width 0.25s', zIndex: 100, position: 'sticky', top: 0, height: '100vh', overflowY: 'hidden' }}>
+      <div className={`admin-sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`} style={{ width: sidebarOpen ? 240 : 72, background: SIDEBAR }}>
 
         {/* Logo */}
         <div style={{ padding: sidebarOpen ? '1.5rem 1.4rem 1rem' : '1.5rem 0 1rem', display: 'flex', alignItems: 'center', gap: 10, justifyContent: sidebarOpen ? 'flex-start' : 'center' }}>
@@ -1065,10 +1066,10 @@ export default function AdminDashboard() {
       </aside>
 
       {/* ═══ MAIN ═════════════════════════════════════════════════════════ */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+      <div className="admin-main">
 
         {/* NeuroNexus-style Top Bar */}
-        <header style={{ background: '#fff', borderBottom: '1px solid #E2E8F0', padding: '0 1.5rem', height: 64, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexShrink: 0, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
+        <header className="admin-topbar-header" style={{ background: '#fff', borderBottom: '1px solid #E2E8F0', padding: '0 1.5rem', height: 64, flexShrink: 0, boxShadow: '0 1px 8px rgba(0,0,0,0.06)' }}>
 
           {/* Left: hamburger + logo + title */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -1087,7 +1088,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Right: action buttons + bell + user */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div className="admin-header-actions">
             {activePage === 'services' && <Btn primary onClick={() => setShowAddJob(true)} style={{ fontSize: '0.8rem', padding: '6px 14px' }}><PlusCircle size={13} /> New Service</Btn>}
             {activePage === 'staff'    && <Btn primary onClick={() => setShowCreateStaff(true)} style={{ fontSize: '0.8rem', padding: '6px 14px' }}><UserPlus size={13} /> New Account</Btn>}
             {activePage === 'bays'     && <Btn primary onClick={() => setShowCreateBay(true)} style={{ fontSize: '0.8rem', padding: '6px 14px' }}><PlusCircle size={13} /> New Bay</Btn>}
@@ -1096,14 +1097,14 @@ export default function AdminDashboard() {
 
 
             {/* User chip */}
-            <div onClick={() => setShowProfile(true)} style={{ display: 'flex', alignItems: 'center', gap: 9, background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12, padding: '5px 12px 5px 5px', cursor: 'pointer' }}>
+            <div onClick={() => setShowProfile(true)} className="admin-user-chip" style={{ display: 'flex', alignItems: 'center', gap: 9, background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 12, padding: '5px 12px 5px 5px', cursor: 'pointer' }}>
               <div style={{ width: 32, height: 32, borderRadius: '50%', background: ACTIVE, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, overflow: 'hidden' }}>
                 {adminUser?.avatar
                   ? <img src={adminUser.avatar} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : <span style={{ color: '#fff', fontWeight: 800, fontSize: '0.72rem' }}>{(adminUser?.name || user?.name || 'A').slice(0,2).toUpperCase()}</span>
                 }
               </div>
-              <div>
+              <div className="user-info">
                 <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.2, whiteSpace: 'nowrap' }}>{adminUser?.name || user?.name || 'Admin User'}</div>
                 <div style={{ fontSize: '0.65rem', color: '#94A3B8', whiteSpace: 'nowrap' }}>Administrator</div>
               </div>
@@ -1146,7 +1147,7 @@ export default function AdminDashboard() {
               <>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
                   <div>
-                    <h2 style={{ margin: '0 0 2px', fontWeight: 800, fontSize: '1.55rem', color: '#0F172A' }}>Welcome back, Admin! 👋</h2>
+                    <h2 className="admin-welcome-text" style={{ margin: '0 0 2px', fontWeight: 800, fontSize: '1.55rem', color: '#0F172A' }}>Welcome back, Admin! 👋</h2>
                     <p style={{ margin: 0, color: '#64748B', fontSize: '0.88rem' }}>Here's what's happening at your workshop today.</p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1158,7 +1159,7 @@ export default function AdminDashboard() {
                 {/* Banner removed */}
 
                 {/* Unified stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 28 }}>
+                <div className="tw-stats-grid" style={{ marginBottom: 28 }}>
                   {[
                     { label: 'Total Vehicles',   val: stats.total,     icon: Car,          bg: '#EB0A1E', sub: 'Registered in system' },
                     { label: 'In Service',        val: stats.inService, icon: Clock,        bg: '#EA580C', sub: 'Needs attention' },
@@ -1262,7 +1263,7 @@ export default function AdminDashboard() {
                     style={{ ...inp, width: 260, height: 36, fontSize: '0.82rem' }} />
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', borderBottom: '1px solid #F1F5F9' }}>
+              <div className="tw-stats-grid" style={{ borderBottom: '1px solid #F1F5F9', marginBottom: '1rem', marginTop: '1rem' }}>
                 {[{ l: 'Total', v: stats.total, c: '#EB0A1E' }, { l: 'In Service', v: stats.inService, c: '#EA580C' }, { l: 'Ready', v: stats.ready, c: '#16A34A' }, { l: 'Pending', v: stats.pending, c: '#64748B' }].map(s => (
                   <div key={s.l} style={{ padding: '0.75rem', borderRight: '1px solid #F1F5F9', textAlign: 'center' }}>
                     <p style={{ margin: '0 0 2px', fontSize: '1.35rem', fontWeight: 800, color: s.c }}>{loadingStats ? '…' : s.v}</p>
@@ -1386,7 +1387,7 @@ export default function AdminDashboard() {
                 <input type="text" placeholder="Search name, email, role…" value={staffSearch} onChange={e => setStaffSearch(e.target.value)}
                   style={{ ...inp, width: 260, height: 36, fontSize: '0.82rem' }} />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5,1fr)', borderBottom: '1px solid #F1F5F9' }}>
+              <div className="tw-stats-grid" style={{ borderBottom: '1px solid #F1F5F9', marginBottom: '1rem', marginTop: '1rem' }}>
                 {[{ l: 'Total', v: staff.length, c: '#1A0508' }, { l: 'Mechanics', v: mechanics, c: '#B00010' }, { l: 'Advisors', v: advisors, c: '#2563EB' }, { l: 'JCs', v: jcs, c: '#D97706' }, { l: 'Customers', v: customers, c: '#7F1D1D' }].map(s => (
                   <div key={s.l} style={{ padding: '0.75rem', borderRight: '1px solid #F1F5F9', textAlign: 'center' }}>
                     <p style={{ margin: '0 0 2px', fontSize: '1.35rem', fontWeight: 800, color: s.c }}>{loadingStaff ? '…' : s.v}</p>

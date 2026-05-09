@@ -208,7 +208,7 @@ img { max-width: 100%; }
 /* ── Stat grid (used in admin/mechanic panels) ───────────── */
 .tw-stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1rem;
 }
 
@@ -335,8 +335,8 @@ img { max-width: 100%; }
   /* Page padding */
   .tw-page { padding: 0.75rem; }
 
-  /* Stat grid — single column */
-  .tw-stats-grid { grid-template-columns: 1fr; }
+  /* Stat grid — 2 columns on mobile for better UI */
+  .tw-stats-grid { grid-template-columns: repeat(2, 1fr); }
 
   /* Button sizing */
   .tw-btn-primary,
@@ -425,3 +425,150 @@ img { max-width: 100%; }
 }
 
 .tw-fade-in { animation: fadeIn 0.3s ease forwards; }
+
+/* ── Admin Dashboard Layout ────────────────────────────── */
+.admin-layout-container {
+  display: flex;
+  min-height: 100vh;
+  background: #F4F7FE;
+  font-family: inherit;
+  position: relative;
+}
+
+.admin-sidebar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  z-index: 1000;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: hidden;
+}
+
+.admin-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  transition: margin-left 0.3s ease;
+}
+
+.admin-topbar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .admin-mobile-header {
+    background: #0F172A !important;
+    color: #fff !important;
+    padding: 1rem 1.25rem !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1) !important;
+  }
+  .admin-mobile-header h2, .admin-mobile-header .admin-welcome-text {
+    color: #fff !important;
+  }
+  .admin-mobile-header .text-muted {
+    color: #94A3B8 !important;
+  }
+}
+
+.admin-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-sidebar {
+    position: fixed;
+    left: 0;
+    transform: translateX(-100%);
+    box-shadow: 4px 0 24px rgba(0,0,0,0.1);
+  }
+  
+  .admin-sidebar.open {
+    transform: translateX(0);
+    width: 240px !important;
+  }
+  
+  .admin-sidebar-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.4);
+    backdrop-filter: blur(2px);
+    z-index: 999;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  
+  .admin-sidebar-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  
+  .admin-topbar-header {
+    padding: 0 1rem !important;
+  }
+  
+  .admin-header-actions {
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-welcome-text {
+    font-size: 1.25rem !important;
+  }
+  
+  .admin-header-actions button {
+    padding: 4px 10px !important;
+    font-size: 0.75rem !important;
+  }
+  
+  .admin-user-chip {
+    padding: 4px !important;
+  }
+  
+  .admin-user-chip .user-info {
+    display: none;
+  }
+}
+
+/* ── Login Split Container ────────────────────────────── */
+.login-split-container {
+  position: relative;
+  overflow: hidden;
+  width: min(820px, 100%);
+  min-height: 540px;
+  border-radius: 20px;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.15);
+  background: #fff;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+
+@media (max-width: 768px) {
+  .login-split-container {
+    display: flex;
+  }
+  .login-split-container > .sign-in-panel,
+  .login-split-container > .sign-up-panel {
+    display: none !important;
+    width: 100%;
+  }
+  .login-split-container.show-signin > .sign-in-panel {
+    display: flex !important;
+  }
+  .login-split-container.show-signup > .sign-up-panel {
+    display: flex !important;
+  }
+}

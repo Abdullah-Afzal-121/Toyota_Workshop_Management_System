@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { CheckCircle2, ChevronRight, X, User, Clock, Settings, LogOut, CheckCircle, RefreshCcw, Wrench } from 'lucide-react'
+import { CheckCircle2, ChevronRight, X, User, Clock, Settings, LogOut, CheckCircle, RefreshCcw, Wrench, Menu } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Spinner } from 'react-bootstrap'
@@ -58,6 +58,7 @@ export default function JCPanel() {
   // Allocate Modal state
   const [allocatingCar, setAllocatingCar] = useState(null)
   const [stageAllocations, setStageAllocations] = useState({}) // { stageId: mechanicId }
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const showToast = (msg, ok = true) => {
     setToast({ msg, ok })
@@ -148,10 +149,11 @@ export default function JCPanel() {
   const readyCount = cars.filter(c => c.status === 'ready').length
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F4F4F5', fontFamily: 'Inter, sans-serif' }}>
+    <div className="admin-layout-container" style={{ background: '#F4F4F5' }}>
       
       {/* Sidebar */}
-      <aside style={{ width: 250, background: '#0F172A', color: '#fff', display: 'flex', flexDirection: 'column' }}>
+      <div className={`admin-sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`} style={{ width: 250, background: '#0F172A', color: '#fff' }}>
         <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: 12, borderBottom: '1px solid #1E293B' }}>
           <img src="/toyota-logo.png" style={{ width: 32, background: '#fff', padding: 2, borderRadius: 4 }} />
           <div>
@@ -170,7 +172,7 @@ export default function JCPanel() {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '2rem 3rem', overflowY: 'auto' }}>
+      <main className="admin-main" style={{ padding: '2rem', overflowY: 'auto' }}>
         
         {toast && (
           <div style={{ position: 'fixed', top: 20, right: 20, zIndex: 100, padding: '1rem', background: toast.ok ? '#DCFCE7' : '#FEE2E2', color: toast.ok ? '#16A34A' : '#DC2626', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
@@ -178,13 +180,18 @@ export default function JCPanel() {
           </div>
         )}
 
-        <div style={{ marginBottom: '2rem' }}>
-          <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: '#0F172A' }}>Job Controller</h2>
-          <p style={{ color: '#64748B', margin: '4px 0 0', fontSize: '0.9rem' }}>Allocate jobs, monitor progress, and verify work.</p>
+        <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button className="d-md-none" onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
+            <Menu size={24} color="#0F172A" />
+          </button>
+          <div>
+            <h2 className="admin-welcome-text" style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: '#0F172A' }}>Job Controller</h2>
+            <p className="d-none d-sm-block" style={{ color: '#64748B', margin: '4px 0 0', fontSize: '0.9rem' }}>Allocate jobs, monitor progress, and verify work.</p>
+          </div>
         </div>
 
         {/* Top Stats */}
-        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem' }}>
+        <div className="tw-stats-grid" style={{ marginBottom: '2rem' }}>
           <StatBox value={receptionCount} label="Reception" valueColor="#2563EB" />
           <StatBox value={inProgressCount} label="In Progress" valueColor="#D97706" />
           <StatBox value={alignWashCount} label="Alignment / Wash" valueColor="#9333EA" />
@@ -216,7 +223,7 @@ export default function JCPanel() {
                   display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 2px 4px rgba(0,0,0,0.02)'
                 }}>
                   {/* Row Top: Info + Allocate Button */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div className="d-flex flex-column flex-sm-row justify-content-between align-items-sm-start gap-3">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%' }}>
                       
                       {/* Title & Badge */}
@@ -226,7 +233,7 @@ export default function JCPanel() {
                       </div>
 
                       {/* Info Grid */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(150px, auto) 2fr 1fr 1fr', gap: '1.5rem', alignItems: 'center', fontSize: '0.8rem', color: '#475569' }}>
+                      <div className="tw-stats-grid" style={{ gap: '1.5rem', alignItems: 'center', fontSize: '0.8rem', color: '#475569' }}>
                         <div><span style={{ color: '#94A3B8' }}>Customer:</span> <strong style={{ color: '#0F172A' }}>{car.customerName}</strong></div>
                         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><span style={{ color: '#94A3B8' }}>Advisor:</span> {advisorEmail}</div>
                         <div><span style={{ color: '#94A3B8' }}>Bay:</span> {bayName}</div>
@@ -327,7 +334,7 @@ export default function JCPanel() {
                     </div>
 
                     {/* Action Button Right */}
-                    <div style={{ marginLeft: '1rem', flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 160 }}>
+                    <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', gap: 8, minWidth: 160, width: '100%', maxWidth: '200px' }} className="mt-3 mt-sm-0">
                       <Btn primary={car.stages.some(s => !s.assignedTechnician)} style={{ background: car.stages.some(s => !s.assignedTechnician) ? '#10B981' : '#F1F5F9', color: car.stages.some(s => !s.assignedTechnician) ? '#fff' : '#0F172A', width: '100%', justifyContent: 'center' }} onClick={() => {
                         setAllocatingCar(car);
                         const initialAllocations = {};

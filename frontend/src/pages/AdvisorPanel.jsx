@@ -38,6 +38,7 @@ export default function AdvisorPanel() {
   const [toast, setToast] = useState(null)
   const [dismissedStoppages, setDismissedStoppages] = useState(new Set())
   const [now, setNow] = useState(Date.now())
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   // Live ticker — updates every second so countdown refreshes in real time
   useEffect(() => {
@@ -167,10 +168,11 @@ export default function AdvisorPanel() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#F8FAFC', fontFamily: 'Inter, sans-serif' }}>
+    <div className="admin-layout-container">
 
       {/* Sidebar */}
-      <aside style={{ width: 260, background: '#0F172A', color: '#fff', display: 'flex', flexDirection: 'column' }}>
+      <div className={`admin-sidebar-overlay ${sidebarOpen ? 'open' : ''}`} onClick={() => setSidebarOpen(false)} />
+      <aside className={`admin-sidebar ${sidebarOpen ? 'open' : ''}`} style={{ width: 260, background: '#0F172A', color: '#fff' }}>
         <div style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: 12 }}>
           <img src="/toyota-logo.png" style={{ width: 40, background: '#fff', borderRadius: 8 }} />
           <div>
@@ -189,7 +191,7 @@ export default function AdvisorPanel() {
       </aside>
 
       {/* Main Content */}
-      <main style={{ flex: 1, padding: '2rem', overflowY: 'auto' }}>
+      <main className="admin-main" style={{ padding: '2rem', overflowY: 'auto', background: '#F8FAFC' }}>
 
         {toast && (
           <div style={{ padding: '1rem', background: toast.ok ? '#DCFCE7' : '#FEE2E2', color: toast.ok ? '#16A34A' : '#DC2626', borderRadius: 8, marginBottom: 20 }}>
@@ -198,14 +200,21 @@ export default function AdvisorPanel() {
         )}
 
         {/* Header */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-          <div>
-            <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: '#0F172A' }}>Service Advisor</h2>
-            <p style={{ color: '#64748B', margin: '4px 0 0', fontSize: '0.9rem' }}>Register new vehicles and monitor workshop progress.</p>
+        <div className="admin-mobile-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <button className="d-md-none" onClick={() => setSidebarOpen(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex' }}>
+              <Menu size={24} color="#ffffff" />
+            </button>
+            <div>
+              <h2 className="admin-welcome-text" style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: '#0F172A' }}>Service Advisor</h2>
+              <p className="text-muted d-none d-sm-block" style={{ color: '#64748B', margin: '4px 0 0', fontSize: '0.9rem' }}>Register new vehicles and monitor workshop progress.</p>
+            </div>
           </div>
-          <Btn primary onClick={() => setShowAdd(true)} style={{ background: '#10B981' }}>
-            <PlusCircle size={18} /> Register Vehicle
-          </Btn>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <Btn primary onClick={() => setShowAdd(true)} style={{ background: '#10B981' }} className="d-none d-sm-flex">
+              <PlusCircle size={18} /> Register Vehicle
+            </Btn>
+          </div>
         </div>
 
         {/* Tabs and Controls */}
@@ -225,7 +234,7 @@ export default function AdvisorPanel() {
             </button>
           </div>
           
-          <div style={{ display: 'flex', gap: '4px', background: '#F1F5F9', padding: '4px', borderRadius: '8px', marginBottom: '4px' }}>
+          <div className="d-none d-md-flex" style={{ gap: '4px', background: '#F1F5F9', padding: '4px', borderRadius: '8px', marginBottom: '4px' }}>
             <button 
               onClick={() => setViewMode('grid')}
               style={{ display: 'flex', alignItems: 'center', padding: '6px', background: viewMode === 'grid' ? '#fff' : 'transparent', border: 'none', borderRadius: '4px', boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: viewMode === 'grid' ? '#0F172A' : '#94A3B8', cursor: 'pointer' }}
@@ -415,7 +424,7 @@ export default function AdvisorPanel() {
             )}
           </div>
         ) : (
-          <div style={{ display: viewMode === 'grid' ? 'grid' : 'flex', flexDirection: viewMode === 'list' ? 'column' : undefined, gridTemplateColumns: viewMode === 'grid' ? 'repeat(auto-fill, minmax(380px, 1fr))' : undefined, gap: '1.5rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.5rem' }}>
             {historyCars.map(car => (
               <div key={car._id} style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '1.25rem', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
@@ -472,13 +481,13 @@ export default function AdvisorPanel() {
 
       {/* Add Modal */}
       {showAdd && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: '#fff', width: 450, borderRadius: 12, overflow: 'hidden' }}>
-            <div style={{ padding: '1.25rem', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: '1rem' }}>
+          <div style={{ background: '#fff', width: '100%', maxWidth: 450, borderRadius: 12, overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
+            <div style={{ padding: '1.25rem', borderBottom: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexShrink: 0 }}>
               <h3 style={{ margin: 0, fontSize: '1.2rem' }}>Register Vehicle</h3>
               <button onClick={() => setShowAdd(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X /></button>
             </div>
-            <form onSubmit={handleRegister} style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <form onSubmit={handleRegister} style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: 12, overflowY: 'auto' }}>
               <input placeholder="Registration Number *" value={form.regNumber} onChange={e => setForm(p => ({ ...p, regNumber: e.target.value }))} style={{ padding: '10px', borderRadius: 8, border: '1px solid #CBD5E1', width: '100%', background: '#F8FAFC' }} />
               <input placeholder="Customer Name *" value={form.customerName} onChange={e => setForm(p => ({ ...p, customerName: e.target.value }))} style={{ padding: '10px', borderRadius: 8, border: '1px solid #CBD5E1', width: '100%', background: '#F8FAFC' }} />
               <input placeholder="Phone" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} style={{ padding: '10px', borderRadius: 8, border: '1px solid #CBD5E1', width: '100%', background: '#F8FAFC' }} />

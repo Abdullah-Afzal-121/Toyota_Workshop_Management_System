@@ -9,8 +9,8 @@ const nodemailer = require('nodemailer');
 function createTransporter() {
   if (!process.env.SMTP_USER) return null;
   return nodemailer.createTransport({
-    host:   process.env.SMTP_HOST   || 'smtp.gmail.com',
-    port:   Number(process.env.SMTP_PORT) || 587,
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: Number(process.env.SMTP_PORT) || 587,
     secure: process.env.SMTP_SECURE === 'true', // true for 465, false for others
     auth: {
       user: process.env.SMTP_USER,
@@ -41,7 +41,7 @@ async function sendPasswordResetEmail(toEmail, name, resetUrl) {
 
   await transporter.sendMail({
     from,
-    to:      toEmail,
+    to: toEmail,
     subject: 'Reset your Toyota Workshop password',
     html: `
       <!DOCTYPE html>
@@ -75,4 +75,57 @@ async function sendPasswordResetEmail(toEmail, name, resetUrl) {
   });
 }
 
-module.exports = { sendPasswordResetEmail };
+
+/**
+ * Send an OTP email for sign up verification.
+ * @param {string} toEmail  - recipient email address
+ * @param {string} name     - recipient name
+ * @param {string} otp      - 6-digit OTP code
+ */
+async function sendOTPEmail(toEmail, name, otp) {
+  const transporter = createTransporter();
+
+  if (!transporter) {
+    // No SMTP configured – log to console so the developer can test manually.
+    console.log('\n[OTP VERIFICATION – email not configured, use this code to test]');
+    console.log(`  To    : ${toEmail}`);
+    console.log(`  Name  : ${name}`);
+    console.log(`  OTP   : ${otp}\n`);
+    return;
+  }
+
+  const from = process.env.SMTP_FROM || `"Toyota Workshop" <${process.env.SMTP_USER}>`;
+
+  await transporter.sendMail({
+    from,
+    to: toEmail,
+    subject: 'Your Toyota Workshop Verification Code',
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <body style="font-family:Arial,sans-serif;background:#f0f2f5;margin:0;padding:2rem;">
+          <div style="max-width:540px;margin:auto;background:#fff;border-radius:12px;padding:2.5rem;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+            <div style="text-align:center;margin-bottom:1.5rem;">
+              <div style="display:inline-block;background:linear-gradient(135deg,#10b981,#059669);border-radius:50%;width:52px;height:52px;line-height:52px;text-align:center;font-size:1.4rem;color:white;">✓</div>
+            </div>
+            <h2 style="color:#0F172A;font-size:1.4rem;margin:0 0 0.5rem;">Hi ${name},</h2>
+            <p style="color:#475569;line-height:1.7;margin:0 0 1.5rem;">
+              Please use the verification code below to complete your sign up.
+              This code is valid for <strong>10 minutes</strong>.
+            </p>
+            <div style="text-align:center;margin:2rem 0;">
+              <div style="display:inline-block;background:#F1F5F9;color:#0F172A;font-weight:800;font-size:2rem;letter-spacing:0.3em;padding:1rem 2rem;border-radius:8px;border:2px dashed #CBD5E1;">
+                ${otp}
+              </div>
+            </div>
+            <p style="color:#94A3B8;font-size:0.78rem;line-height:1.6;margin:0;">
+              If you didn't request this code, you can safely ignore this email.
+            </p>
+          </div>
+        </body>
+      </html>
+    `,
+  });
+}
+
+module.exports = { sendPasswordResetEmail, sendOTPEmail };
