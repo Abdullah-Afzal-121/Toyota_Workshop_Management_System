@@ -145,6 +145,42 @@ router.post('/cars/:carId/stages', verifyToken, requireRole('admin', 'advisor', 
 });
 
 /**
+ * PATCH /api/admin/cars/:carId
+ * Advisor/Admin – update car details (name, model, phone, reg, flags).
+ * Only allowed when car has no completed stages (i.e. work has not started).
+ */
+router.patch('/cars/:carId', verifyToken, requireRole('admin', 'advisor'), async (req, res) => {
+  try {
+    const car = await Car.findById(req.params.carId);
+    if (!car) return res.status(404).json({ message: 'Car not found.' });
+
+    const { customerName, carModel, regNumber, phoneNumber, needsAlignment, needsWashing } = req.body;
+
+    if (customerName !== undefined) car.customerName = customerName.trim();
+    if (carModel     !== undefined) car.carModel     = carModel.trim() || 'N/A';
+    if (phoneNumber  !== undefined) car.phoneNumber  = phoneNumber.trim();
+    if (needsAlignment !== undefined) car.needsAlignment = !!needsAlignment;
+    if (needsWashing   !== undefined) car.needsWashing   = !!needsWashing;
+
+    // If reg number is changing, check for duplicate
+    if (regNumber !== undefined) {
+      const newReg = regNumber.trim().toUpperCase();
+      if (newReg !== car.regNumber) {
+        const exists = await Car.findOne({ regNumber: newReg, _id: { $ne: car._id } });
+        if (exists) return res.status(409).json({ message: `Registration number ${newReg} is already in use.` });
+      }
+      car.regNumber = regNumber.trim().toUpperCase();
+    }
+
+    await car.save();
+    if (req.app.get('io')) req.app.get('io').emit('workshop_update');
+    res.json({ message: 'Car details updated.', car });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+/**
  * DELETE /api/admin/cars/:carId
  * Admin/Advisor – remove a car and all associated stages.
  * Used for rollback when registration fails partway through.
@@ -376,6 +412,12 @@ router.put('/cars/:carId/status', verifyToken, requireRole('admin', 'advisor', '
     if (!car) return res.status(404).json({ message: 'Car not found.' });
     
     car.status = status;
+    // Track when the car first became ready for delivery
+    if (status === 'ready' && !car.readyAt) {
+      car.readyAt = new Date();
+    } else if (status !== 'ready') {
+      car.readyAt = null;
+    }
     await car.save();
     if (req.app.get('io')) req.app.get('io').emit('workshop_update');
     res.json({ message: 'Car status updated.', car });

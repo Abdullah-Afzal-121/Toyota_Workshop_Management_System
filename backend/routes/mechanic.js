@@ -93,7 +93,10 @@ router.patch('/complete-stage/:stageId', verifyToken, async (req, res) => {
         const lastStoppage = stoppageRemarks[stoppageRemarks.length - 1];
         const customerResponded = lastStoppage && lastStoppage.customerResponse;
 
-        if (diffMins < 10 && !customerResponded) {
+        // JC rejections are internal rework instructions — bypass the 10-min customer wait entirely
+        const isJCRejection = lastStoppage && lastStoppage.text && lastStoppage.text.includes('REJECTED BY JOB CONTROLLER');
+
+        if (diffMins < 10 && !customerResponded && !isJCRejection) {
           return res.status(400).json({ message: `You must wait 10 minutes after adding a remark before ending the job. (${Math.ceil(10 - diffMins)}m remaining)` });
         }
       }

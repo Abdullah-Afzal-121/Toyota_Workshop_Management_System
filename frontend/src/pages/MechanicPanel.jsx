@@ -253,12 +253,15 @@ export default function MechanicPanel() {
                                 : null
                               const customerResponded = !!(lastStoppage && lastStoppage.customerResponse)
 
-                              // 10-min block: measured from last STOPPAGE remark, bypassed if customer responded
+                              // JC rejections are internal — bypass the 10-min wait entirely
+                              const isJCRejection = !!(lastStoppage && lastStoppage.text && lastStoppage.text.includes('REJECTED BY JOB CONTROLLER'))
+
+                              // 10-min block: measured from last STOPPAGE remark, bypassed if customer responded OR it's a JC rejection
                               let minutesSinceStoppage = 999
                               if (lastStoppage) {
                                 minutesSinceStoppage = (now - new Date(lastStoppage.createdAt)) / 1000 / 60
                               }
-                              const blocked = minutesSinceStoppage < 10 && !customerResponded
+                              const blocked = minutesSinceStoppage < 10 && !customerResponded && !isJCRejection
                               const remainMins = blocked ? Math.ceil(10 - minutesSinceStoppage) : 0
 
                               if (stage.isPaused) {
@@ -307,7 +310,8 @@ export default function MechanicPanel() {
                           const stoppageRemarks = stage.remarks ? stage.remarks.filter(r => r.isStoppage) : []
                           const lastStoppage = stoppageRemarks.length > 0 ? stoppageRemarks[stoppageRemarks.length - 1] : null
                           const customerResponded = lastStoppage && lastStoppage.customerResponse
-                          const pendingResponse = stage.isPaused && lastStoppage && !customerResponded
+                          const isJCRejection = lastStoppage && lastStoppage.text && lastStoppage.text.includes('REJECTED BY JOB CONTROLLER')
+                          const pendingResponse = stage.isPaused && lastStoppage && !customerResponded && !isJCRejection
 
                           return (
                             <div style={{ borderTop: `1px solid ${stage.isPaused ? '#CBD5E1' : (isOverdue ? '#FECDD3' : '#FED7AA')}` }}>
@@ -329,6 +333,23 @@ export default function MechanicPanel() {
                                   <span>Waiting for customer response via Advisor — auto-unlocks in {Math.ceil(10 - (now - new Date(lastStoppage.createdAt)) / 1000 / 60)} min</span>
                                 </div>
                               )}
+                            </div>
+                          )
+                        })()}
+
+                        {/* JC Rework Required notice — shown on any stage rejected by JC */}
+                        {(() => {
+                          const jcRejection = stage.remarks && stage.remarks.find(r => r.isStoppage && r.text && r.text.includes('REJECTED BY JOB CONTROLLER'))
+                          if (!jcRejection) return null
+                          return (
+                            <div style={{ borderTop: '2px solid #FED7AA', background: '#FFF7ED', padding: '8px 14px', display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+                              <span style={{ fontSize: '1rem', flexShrink: 0 }}>🔁</span>
+                              <div>
+                                <div style={{ fontSize: '0.8rem', fontWeight: 800, color: '#C2410C' }}>Rework Required — Rejected by Job Controller</div>
+                                <div style={{ fontSize: '0.75rem', color: '#92400E', marginTop: 2 }}>
+                                  Please redo this job and submit again for JC verification.
+                                </div>
+                              </div>
                             </div>
                           )
                         })()}

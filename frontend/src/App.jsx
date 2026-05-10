@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { GoogleOAuthProvider } from '@react-oauth/google'
+import { Spinner } from 'react-bootstrap'
 
 import { ToastProvider }   from './context/ToastContext'
 import ToastContainer      from './components/ToastContainer'
@@ -19,8 +20,29 @@ import FAQ                 from './pages/FAQ'
 import ContactUs           from './pages/ContactUs'
 import PrivacyPolicy       from './pages/PrivacyPolicy'
 import TermsOfService      from './pages/TermsOfService'
+import { useAuth, ROLE_HOME } from './context/AuthContext'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || ''
+
+/**
+ * HomeGuard — shows a spinner while auth is rehydrating,
+ * redirects logged-in users to their dashboard,
+ * shows the public Home page for guests.
+ */
+function HomeGuard() {
+  const { user, loading } = useAuth()
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh' }}>
+        <Spinner animation="border" style={{ color: '#EB0A1E' }} />
+      </div>
+    )
+  }
+  if (user) {
+    return <Navigate to={ROLE_HOME[user.role] || '/login'} replace />
+  }
+  return <Home />
+}
 
 function App() {
   return (
@@ -31,8 +53,8 @@ function App() {
       <Header />
 
       <Routes>
-        {/* Public */}
-        <Route path="/"           element={<Home />} />
+        {/* Public — HomeGuard handles auth redirect + loading */}
+        <Route path="/"           element={<HomeGuard />} />
         <Route path="/login"      element={<Login />} />
         <Route path="/admin-login" element={<AdminLogin />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

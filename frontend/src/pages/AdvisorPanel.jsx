@@ -1,12 +1,32 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { PlusCircle, Search, Menu, UserCircle2, LogOut, CheckCircle2, ChevronRight, X, User, AlertCircle, Car, LayoutGrid, List } from 'lucide-react'
+import { PlusCircle, Search, Menu, UserCircle2, LogOut, CheckCircle2, ChevronRight, X, User, AlertCircle, Car, LayoutGrid, List, Pencil, Trash2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Spinner } from 'react-bootstrap'
 import { io } from 'socket.io-client'
 
 const TOYOTA_RED = '#EB0A1E'
+
+// ── Time Helpers ──────────────────────────────────────────────────────────────
+const fmtDuration = (totalMinutes) => {
+  if (!totalMinutes || totalMinutes <= 0) return null
+  const h = Math.floor(totalMinutes / 60)
+  const m = totalMinutes % 60
+  if (h > 0 && m > 0) return `${h}h ${m}m`
+  if (h > 0) return `${h}h`
+  return `${m}m`
+}
+
+const fmtElapsed = (ms) => {
+  const totalSec = Math.floor(ms / 1000)
+  const h = Math.floor(totalSec / 3600)
+  const m = Math.floor((totalSec % 3600) / 60)
+  const s = totalSec % 60
+  if (h > 0) return `${h}h ${m}m`
+  if (m > 0) return `${m}m ${s}s`
+  return `${s}s`
+}
 
 function Btn({ children, primary, onClick, style, disabled }) {
   return (
@@ -39,6 +59,13 @@ export default function AdvisorPanel() {
   const [dismissedStoppages, setDismissedStoppages] = useState(new Set())
   const [now, setNow] = useState(Date.now())
   const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  // Edit / Delete state
+  const [editCar, setEditCar]       = useState(null)  // car object being edited
+  const [editForm, setEditForm]     = useState({})
+  const [editSaving, setEditSaving] = useState(false)
+  const [deleteCar, setDeleteCar]   = useState(null)  // car to confirm delete
+  const [deleting, setDeleting]     = useState(false)
 
   // Live ticker — updates every second so countdown refreshes in real time
   useEffect(() => {
@@ -167,6 +194,89 @@ export default function AdvisorPanel() {
     }
   }
 
+  const openEdit = (car) => {
+    setEditCar(car)
+    setEditForm({
+      customerName:   car.customerName,
+      carModel:       car.carModel,
+      regNumber:      car.regNumber,
+      phoneNumber:    car.phoneNumber || '',
+      needsAlignment: car.needsAlignment,
+      needsWashing:   car.needsWashing,
+      addJobId: '',   // selected job from dropdown to add
+    })
+  }
+
+  const removeStageFromEdit = async (stageId, stageName) => {
+    if (!window.confirm(`Remove "${stageName}" from this vehicle?`)) return
+    try {
+      await axios.delete(`/api/admin/stages/${stageId}`)
+      showToast(`"${stageName}" removed.`)
+      // Refresh editCar's stages live
+      const { data } = await axios.get('/api/admin/cars')
+      const updated = data.find(c => c._id === editCar._id)
+      if (updated) setEditCar(updated)
+      fetchCars()
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Cannot remove this job', false)
+    }
+  }
+
+  const addStageFromEdit = async () => {
+    const jobId = editForm.addJobId
+    if (!jobId) return showToast('Please select a job to add.', false)
+    const jobTemplate = jobMasters.find(j => j._id === jobId)
+    if (!jobTemplate) return
+    try {
+      await axios.post(`/api/admin/cars/${editCar._id}/stages`, {
+        stageName: jobTemplate.title,
+        estimatedMinutes: jobTemplate.estimatedMinutes
+      })
+      showToast(`"${jobTemplate.title}" added!`)
+      setEditForm(f => ({ ...f, addJobId: '' }))
+      // Refresh editCar's stages live
+      const { data } = await axios.get('/api/admin/cars')
+      const updated = data.find(c => c._id === editCar._id)
+      if (updated) setEditCar(updated)
+      fetchCars()
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Error adding job', false)
+    }
+  }
+
+  const handleEditSave = async (e) => {
+    e.preventDefault()
+    if (!editForm.customerName || !editForm.regNumber) {
+      return showToast('Customer name and registration number are required.', false)
+    }
+    setEditSaving(true)
+    try {
+      await axios.patch(`/api/admin/cars/${editCar._id}`, editForm)
+      showToast('Car details updated successfully!')
+      setEditCar(null)
+      fetchCars()
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Error updating car', false)
+    } finally {
+      setEditSaving(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteCar) return
+    setDeleting(true)
+    try {
+      await axios.delete(`/api/admin/cars/${deleteCar._id}`)
+      showToast('Vehicle removed successfully.')
+      setDeleteCar(null)
+      fetchCars()
+    } catch (err) {
+      showToast(err.response?.data?.message || 'Error removing car', false)
+    } finally {
+      setDeleting(false)
+    }
+  }
+
   return (
     <div className="admin-layout-container">
 
@@ -262,7 +372,9 @@ export default function AdvisorPanel() {
                     car.stages.forEach(stage => {
                       if (!stage.remarks) return
                       stage.remarks.forEach(remark => {
-                        if (remark.isStoppage && !remark.customerResponse && !dismissedStoppages.has(remark._id)) {
+                        // Skip JC rejection remarks — those are internal, not customer-facing
+                        const isJCRejection = remark.text && remark.text.includes('REJECTED BY JOB CONTROLLER')
+                        if (remark.isStoppage && !remark.customerResponse && !dismissedStoppages.has(remark._id) && !isJCRejection) {
                           pendingStoppages.push({ car, stage, remark })
                         }
                       })
@@ -355,9 +467,10 @@ export default function AdvisorPanel() {
                       </div>
                     </div>
                   </div>
-                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                  <div style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
+                    {/* Status Badge */}
                     {car.status === 'ready' ? (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                         <span style={{ color: '#16A34A', background: '#DCFCE7', padding: '6px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em' }}>READY</span>
                         <Btn onClick={() => closeJobCard(car._id)} style={{ padding: '6px 14px', fontSize: '0.75rem', background: '#3B82F6', color: '#fff', border: 'none' }}>Bill Manually &amp; Close</Btn>
                       </div>
@@ -366,8 +479,76 @@ export default function AdvisorPanel() {
                     ) : (
                       <span style={{ color: '#1D4ED8', background: '#DBEAFE', padding: '6px 14px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.05em' }}>RECEPTION</span>
                     )}
+                    {/* Edit / Delete actions */}
+                    <div style={{ display: 'flex', gap: 6 }}>
+                      <button
+                        onClick={() => openEdit(car)}
+                        title="Edit car details"
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 6, border: '1px solid #E2E8F0', background: '#fff', color: '#475569', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+                      >
+                        <Pencil size={13} /> Edit
+                      </button>
+                      <button
+                        onClick={() => setDeleteCar(car)}
+                        title="Remove vehicle"
+                        style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 10px', borderRadius: 6, border: '1px solid #FECACA', background: '#FEF2F2', color: '#DC2626', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600 }}
+                      >
+                        <Trash2 size={13} /> Remove
+                      </button>
+                    </div>
                   </div>
                 </div>
+
+                {/* ── Time Info Row ── */}
+                {(() => {
+                  const totalEst = car.stages?.reduce((sum, s) => sum + (s.estimatedMinutes || 0), 0) || 0
+                  const startedStages = car.stages?.filter(s => s.startedAt) || []
+                  const earliestStart = startedStages.length
+                    ? new Date(Math.min(...startedStages.map(s => new Date(s.startedAt))))
+                    : null
+
+                  // Remaining = estimated total - elapsed active time
+                  const elapsedMs = earliestStart ? (now - earliestStart) : 0
+                  const elapsedMin = Math.floor(elapsedMs / 60000)
+                  const remainingMin = totalEst > 0 ? Math.max(0, totalEst - elapsedMin) : null
+                  const isOvertime = totalEst > 0 && elapsedMin > totalEst
+
+                  // Ready time elapsed
+                  const readyElapsed = car.readyAt ? fmtElapsed(now - new Date(car.readyAt)) : null
+
+                  if (!totalEst && !readyElapsed) return null
+
+                  return (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 }}>
+                      {totalEst > 0 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: '5px 10px', fontSize: '0.75rem' }}>
+                          <span style={{ color: '#64748B' }}>⏱ Est:</span>
+                          <span style={{ fontWeight: 700, color: '#0F172A' }}>{fmtDuration(totalEst)}</span>
+                        </div>
+                      )}
+                      {earliestStart && car.status !== 'ready' && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 8, padding: '5px 10px', fontSize: '0.75rem' }}>
+                          <span style={{ color: '#64748B' }}>⏳ Elapsed:</span>
+                          <span style={{ fontWeight: 700, color: '#0F172A' }}>{fmtElapsed(elapsedMs)}</span>
+                        </div>
+                      )}
+                      {remainingMin !== null && car.status !== 'ready' && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: isOvertime ? '#FEF2F2' : '#F0FDF4', border: `1px solid ${isOvertime ? '#FECACA' : '#BBF7D0'}`, borderRadius: 8, padding: '5px 10px', fontSize: '0.75rem' }}>
+                          <span style={{ color: isOvertime ? '#DC2626' : '#16A34A' }}>{isOvertime ? '⚠ Overtime:' : '✅ Remaining:'}</span>
+                          <span style={{ fontWeight: 700, color: isOvertime ? '#DC2626' : '#16A34A' }}>
+                            {isOvertime ? `+${fmtDuration(elapsedMin - totalEst)}` : fmtDuration(remainingMin)}
+                          </span>
+                        </div>
+                      )}
+                      {readyElapsed && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 8, padding: '5px 10px', fontSize: '0.75rem' }}>
+                          <span style={{ color: '#16A34A' }}>🏁 Ready for:</span>
+                          <span style={{ fontWeight: 700, color: '#15803D' }}>{readyElapsed}</span>
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
 
                 {/* Job Allocations */}
                 {car.stages && car.stages.length > 0 && (
@@ -393,28 +574,53 @@ export default function AdvisorPanel() {
                 )}
 
                 {/* Remarks with customer response status */}
-                {car.stages && car.stages.some(s => s.remarks && s.remarks.length > 0) && (
-                  <div style={{ padding: '8px 12px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0', fontSize: '0.8rem' }}>
-                    <div style={{ fontWeight: 700, color: '#64748B', marginBottom: 4 }}>REMARKS / STOPPAGES:</div>
-                    {car.stages.map(stage =>
-                      stage.remarks && stage.remarks.length > 0 ? (
-                        <div key={stage._id} style={{ marginBottom: 4 }}>
-                          <span style={{ fontWeight: 600, color: '#475569' }}>[{stage.stageName}]</span>
-                          {stage.remarks.map((r, idx) => (
-                            <div key={r._id || idx} style={{ marginLeft: 8, color: r.isStoppage ? '#DC2626' : '#334155', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
-                              <span>{r.isStoppage ? '⚠ ' : '▶ '}{r.text}</span>
-                              {r.isStoppage && r.customerResponse && (
-                                <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: r.customerResponse === 'approved' ? '#DCFCE7' : '#FEE2E2', color: r.customerResponse === 'approved' ? '#16A34A' : '#DC2626' }}>
-                                  {r.customerResponse === 'approved' ? '✔ Approved' : '✘ Declined'}
-                                </span>
-                              )}
-                            </div>
-                          ))}
+                {car.stages && car.stages.some(s => s.remarks && s.remarks.length > 0) && (() => {
+                  // Separate JC rejections from mechanic stoppages
+                  const hasVisibleRemarks = car.stages.some(s =>
+                    s.remarks && s.remarks.some(r => !r.text?.includes('REJECTED BY JOB CONTROLLER'))
+                  )
+                  const hasJCRejections = car.stages.some(s =>
+                    s.remarks && s.remarks.some(r => r.text?.includes('REJECTED BY JOB CONTROLLER'))
+                  )
+                  if (!hasVisibleRemarks && !hasJCRejections) return null
+                  return (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {/* JC Rejection Notice (internal — not customer-facing) */}
+                      {hasJCRejections && (
+                        <div style={{ padding: '7px 12px', background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 8, fontSize: '0.78rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <span style={{ fontWeight: 800, color: '#C2410C' }}>🔁 JC Rework Required</span>
+                          <span style={{ color: '#92400E' }}>— Job rejected by Job Controller and sent back to mechanic for rework.</span>
                         </div>
-                      ) : null
-                    )}
-                  </div>
-                )}
+                      )}
+                      {/* Mechanic Remarks / Stoppages */}
+                      {hasVisibleRemarks && (
+                        <div style={{ padding: '8px 12px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0', fontSize: '0.8rem' }}>
+                          <div style={{ fontWeight: 700, color: '#64748B', marginBottom: 4 }}>REMARKS / STOPPAGES:</div>
+                          {car.stages.map(stage =>
+                            stage.remarks && stage.remarks.filter(r => !r.text?.includes('REJECTED BY JOB CONTROLLER')).length > 0 ? (
+                              <div key={stage._id} style={{ marginBottom: 4 }}>
+                                <span style={{ fontWeight: 600, color: '#475569' }}>[{stage.stageName}]</span>
+                                {stage.remarks
+                                  .filter(r => !r.text?.includes('REJECTED BY JOB CONTROLLER'))
+                                  .map((r, idx) => (
+                                    <div key={r._id || idx} style={{ marginLeft: 8, color: r.isStoppage ? '#DC2626' : '#334155', display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 2 }}>
+                                      <span>{r.isStoppage ? '⚠ ' : '▶ '}{r.text}</span>
+                                      {r.isStoppage && r.customerResponse && (
+                                        <span style={{ fontSize: '0.65rem', fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: r.customerResponse === 'approved' ? '#DCFCE7' : '#FEE2E2', color: r.customerResponse === 'approved' ? '#16A34A' : '#DC2626' }}>
+                                          {r.customerResponse === 'approved' ? '✔ Approved' : '✘ Declined'}
+                                        </span>
+                                      )}
+                                    </div>
+                                  ))
+                                }
+                              </div>
+                            ) : null
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })()}
               </div>
             ))}
             {cars.length === 0 && (
@@ -541,6 +747,146 @@ export default function AdvisorPanel() {
                 </Btn>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* ── Edit Car Modal ── */}
+      {editCar && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 540, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+
+            {/* Modal Header */}
+            <div style={{ padding: '1.5rem 2rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #F1F5F9' }}>
+              <h3 style={{ margin: 0, fontWeight: 800, fontSize: '1.1rem', color: '#0F172A' }}>✏️ Edit Vehicle — {editCar.regNumber}</h3>
+              <button onClick={() => setEditCar(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94A3B8' }}><X size={20} /></button>
+            </div>
+
+            {/* Scrollable Body */}
+            <div style={{ overflowY: 'auto', flex: 1, padding: '1.5rem 2rem' }}>
+              <form id="edit-car-form" onSubmit={handleEditSave} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                {/* ── Basic Info ── */}
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>Customer &amp; Vehicle Info</div>
+                {[['customerName', 'Customer Name'], ['carModel', 'Car Model'], ['regNumber', 'Registration Number'], ['phoneNumber', 'Phone Number']].map(([field, label]) => (
+                  <div key={field}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: 4 }}>{label}</label>
+                    <input
+                      type="text"
+                      value={editForm[field] || ''}
+                      onChange={e => setEditForm(f => ({ ...f, [field]: e.target.value }))}
+                      style={{ width: '100%', padding: '0.65rem 0.9rem', borderRadius: 8, border: '1px solid #E2E8F0', fontSize: '0.875rem', boxSizing: 'border-box', outline: 'none' }}
+                      onFocus={e => e.target.style.borderColor = TOYOTA_RED}
+                      onBlur={e => e.target.style.borderColor = '#E2E8F0'}
+                    />
+                  </div>
+                ))}
+                <div style={{ display: 'flex', gap: '1.5rem' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', cursor: 'pointer', color: '#334155' }}>
+                    <input type="checkbox" checked={!!editForm.needsAlignment} onChange={e => setEditForm(f => ({ ...f, needsAlignment: e.target.checked }))} />
+                    Needs Alignment
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', cursor: 'pointer', color: '#334155' }}>
+                    <input type="checkbox" checked={!!editForm.needsWashing} onChange={e => setEditForm(f => ({ ...f, needsWashing: e.target.checked }))} />
+                    Needs Washing
+                  </label>
+                </div>
+              </form>
+
+              {/* ── Jobs Section ── */}
+              <div style={{ marginTop: '1.5rem', paddingTop: '1.25rem', borderTop: '1px solid #F1F5F9' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '0.75rem' }}>Job Allocations</div>
+
+                {/* Current Stages */}
+                {editCar.stages && editCar.stages.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: '1rem' }}>
+                    {editCar.stages.map(stage => (
+                      <div key={stage._id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 12px', background: '#F8FAFC', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.85rem', color: stage.isCompleted ? '#94A3B8' : '#0F172A', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {stage.isCompleted && <span style={{ color: '#16A34A', fontSize: '0.7rem', fontWeight: 800, background: '#DCFCE7', padding: '1px 6px', borderRadius: 4 }}>✔ Done</span>}
+                            {stage.startedAt && !stage.isCompleted && <span style={{ color: '#D97706', fontSize: '0.7rem', fontWeight: 800, background: '#FEF3C7', padding: '1px 6px', borderRadius: 4 }}>⚡ Active</span>}
+                            {stage.stageName}
+                          </div>
+                          {stage.estimatedMinutes && (
+                            <div style={{ fontSize: '0.72rem', color: '#94A3B8', marginTop: 2 }}>Est: {stage.estimatedMinutes}m</div>
+                          )}
+                        </div>
+                        {/* Only allow removing stages that haven't started */}
+                        {!stage.startedAt && !stage.isCompleted ? (
+                          <button
+                            onClick={() => removeStageFromEdit(stage._id, stage.stageName)}
+                            title="Remove this job"
+                            style={{ background: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', borderRadius: 6, padding: '4px 8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, fontSize: '0.72rem', fontWeight: 600, flexShrink: 0 }}
+                          >
+                            <X size={12} /> Remove
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: '0.68rem', color: '#CBD5E1', fontStyle: 'italic', flexShrink: 0 }}>locked</span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p style={{ fontSize: '0.82rem', color: '#94A3B8', margin: '0 0 1rem' }}>No jobs assigned yet.</p>
+                )}
+
+                {/* Add New Job */}
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <select
+                    value={editForm.addJobId || ''}
+                    onChange={e => setEditForm(f => ({ ...f, addJobId: e.target.value }))}
+                    style={{ flex: 1, padding: '0.65rem 0.75rem', borderRadius: 8, border: '1px solid #E2E8F0', fontSize: '0.85rem', outline: 'none', color: editForm.addJobId ? '#0F172A' : '#94A3B8', background: '#fff' }}
+                  >
+                    <option value="">+ Select job to add...</option>
+                    {jobMasters
+                      .filter(j => !(editCar.stages || []).some(s => s.stageName === j.title))
+                      .map(j => (
+                        <option key={j._id} value={j._id}>{j.title} ({j.estimatedMinutes}m)</option>
+                      ))
+                    }
+                  </select>
+                  <button
+                    type="button"
+                    onClick={addStageFromEdit}
+                    disabled={!editForm.addJobId}
+                    style={{ padding: '0.65rem 1rem', borderRadius: 8, border: 'none', background: editForm.addJobId ? TOYOTA_RED : '#E2E8F0', color: editForm.addJobId ? '#fff' : '#94A3B8', fontWeight: 700, cursor: editForm.addJobId ? 'pointer' : 'not-allowed', fontSize: '0.85rem', flexShrink: 0 }}
+                  >
+                    Add Job
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{ padding: '1rem 2rem 1.5rem', borderTop: '1px solid #F1F5F9', display: 'flex', gap: 10 }}>
+              <button type="button" onClick={() => setEditCar(null)} style={{ flex: 1, padding: '0.72rem', borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', fontWeight: 600, cursor: 'pointer', fontSize: '0.875rem' }}>Close</button>
+              <button type="submit" form="edit-car-form" disabled={editSaving} style={{ flex: 2, padding: '0.72rem', borderRadius: 8, border: 'none', background: TOYOTA_RED, color: '#fff', fontWeight: 700, cursor: editSaving ? 'not-allowed' : 'pointer', fontSize: '0.875rem', opacity: editSaving ? 0.7 : 1 }}>
+                {editSaving ? 'Saving...' : 'Save Vehicle Info'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Delete Confirmation Modal ── */}
+      {deleteCar && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '2rem', width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', textAlign: 'center' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+              <Trash2 size={24} color="#DC2626" />
+            </div>
+            <h3 style={{ margin: '0 0 0.5rem', fontWeight: 800, color: '#0F172A' }}>Remove Vehicle?</h3>
+            <p style={{ color: '#64748B', fontSize: '0.9rem', margin: '0 0 0.25rem' }}>
+              <strong style={{ color: '#0F172A' }}>{deleteCar.regNumber}</strong> — {deleteCar.customerName}
+            </p>
+            <p style={{ color: '#94A3B8', fontSize: '0.8rem', margin: '0 0 1.5rem' }}>
+              This will permanently delete the vehicle and all associated job records. This cannot be undone.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setDeleteCar(null)} style={{ flex: 1, padding: '0.72rem', borderRadius: 8, border: '1px solid #E2E8F0', background: '#fff', fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+              <button onClick={handleDelete} disabled={deleting} style={{ flex: 1, padding: '0.72rem', borderRadius: 8, border: 'none', background: '#DC2626', color: '#fff', fontWeight: 700, cursor: deleting ? 'not-allowed' : 'pointer', opacity: deleting ? 0.7 : 1 }}>
+                {deleting ? 'Removing...' : 'Yes, Remove'}
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -12,12 +12,35 @@ router.get('/:regNumber', async (req, res) => {
     const car = await Car.findOne({ regNumber: req.params.regNumber.toUpperCase() });
     if (!car) return res.status(404).json({ message: 'Car not found. Check your registration number.' });
 
+    // ── Verification: Name + Phone must match ──
+    const providedPhone = (req.query.phone || '').replace(/\s/g, '');
+    const providedName  = (req.query.name  || '').trim().toLowerCase();
+
+    const storedPhone = (car.phoneNumber  || '').replace(/\s/g, '');
+    const storedName  = (car.customerName || '').trim().toLowerCase();
+
+    if (!providedPhone || !providedName) {
+      return res.status(403).json({ message: 'Please fill in your Name and Phone Number to verify ownership.' });
+    }
+    if (providedPhone !== storedPhone || providedName !== storedName) {
+      return res.status(403).json({ message: 'Details do not match our records. Please check your Name and Phone Number.' });
+    }
+
     const stages = await ServiceStage.find({ carId: car._id }).sort({ order: 1 });
+
+    // Strip internal JC rejection remarks — customers should never see these
+    const customerStages = stages.map(stage => {
+      const s = stage.toObject();
+      if (s.remarks && s.remarks.length > 0) {
+        s.remarks = s.remarks.filter(r => !r.text || !r.text.includes('REJECTED BY JOB CONTROLLER'));
+      }
+      return s;
+    });
 
     const completed = stages.filter((s) => s.isCompleted).length;
     const progress  = stages.length ? Math.round((completed / stages.length) * 100) : 0;
 
-    res.json({ car, stages, progress });
+    res.json({ car, stages: customerStages, progress });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

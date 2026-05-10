@@ -145,7 +145,11 @@ function FeedbackPanel({ regNumber, existing, onSubmitted }) {
 export default function CustomerTracker() {
   const [searchParams]                  = useSearchParams()
   const [regInput, setRegInput]         = useState('')
+  const [phoneInput, setPhoneInput]     = useState('')
+  const [nameInput, setNameInput]       = useState('')
   const [regNumber, setRegNumber]       = useState(null)
+  const [phone, setPhone]               = useState(null)
+  const [custName, setCustName]         = useState(null)
   const [data, setData]                 = useState(null)
   const [loading, setLoading]           = useState(false)
   const [error, setError]               = useState(null)
@@ -166,36 +170,40 @@ export default function CustomerTracker() {
     }
   }, [searchParams])
 
-  const fetchData = async (reg) => {
-    if (!reg) return
+  const fetchData = async (reg, ph, nm) => {
+    if (!reg || !ph || !nm) return
     setLoading(true); setError(null)
     try {
-      const { data: result } = await axios.get(`/api/cars/${reg}`)
+      const { data: result } = await axios.get(`/api/cars/${reg}`, { params: { phone: ph, name: nm } })
       setData(result)
       setLastUpdated(new Date().toLocaleTimeString())
     } catch (err) {
-      setError(err.response?.data?.message || 'Car not found. Please check your registration number.')
+      setError(err.response?.data?.message || 'Details not found. Please check all fields.')
       setData(null)
     } finally { setLoading(false) }
   }
 
   useEffect(() => {
-    if (!regNumber) return
-    fetchData(regNumber)
+    if (!regNumber || !phone || !custName) return
+    fetchData(regNumber, phone, custName)
     
     const socket = io(import.meta.env.VITE_API_URL || '/')
     socket.on('workshop_update', () => {
-      fetchData(regNumber)
+      fetchData(regNumber, phone, custName)
     })
 
     return () => socket.disconnect()
-  }, [regNumber])
+  }, [regNumber, phone, custName])
 
   const handleSearch = (e) => {
     e.preventDefault()
-    const trimmed = regInput.trim().toUpperCase()
-    if (!trimmed) return
-    setRegNumber(trimmed)
+    const trimmedReg   = regInput.trim().toUpperCase()
+    const trimmedPhone = phoneInput.trim()
+    const trimmedName  = nameInput.trim()
+    if (!trimmedReg || !trimmedPhone || !trimmedName) return
+    setRegNumber(trimmedReg)
+    setPhone(trimmedPhone)
+    setCustName(trimmedName)
   }
 
   const smeta = data ? (STATUS_META[data.car.status] || STATUS_META.pending) : null
@@ -209,30 +217,59 @@ export default function CustomerTracker() {
           Track Your Car
         </h2>
         <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>
-          Enter your vehicle registration number to see live service progress.
+          Enter your details to verify ownership and view live service progress.
         </p>
       </div>
 
-      {/* ── Search ─────────────────────────────────────────────────── */}
-      <form onSubmit={handleSearch} className="tw-search-wrap mb-5">
-        <Search size={17} className="tw-search-icon" />
-        <input
-          type="text"
-          className="tw-input"
-          placeholder="e.g. ABC-1234"
-          value={regInput}
-          onChange={(e) => { setRegInput(e.target.value); setError(null) }}
-          style={{ paddingLeft: '2.6rem', borderRadius: '10px 0 0 10px' }}
-          autoFocus
-        />
-        <button
-          type="submit"
-          className="tw-btn-primary"
-          disabled={loading}
-          style={{ borderRadius: '0 10px 10px 0', padding: '0 1.4rem', height: 46, fontSize: '0.9rem' }}
-        >
-          {loading ? <Spinner size="sm" animation="border" /> : 'Search'}
-        </button>
+      {/* ── Search form — single row on desktop, stacked on mobile ── */}
+      <form onSubmit={handleSearch} className="mb-5">
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: 8,
+          alignItems: 'stretch',
+        }}>
+          {/* Customer Name */}
+          <input
+            type="text"
+            className="tw-input"
+            placeholder="Your Name"
+            value={nameInput}
+            onChange={(e) => { setNameInput(e.target.value); setError(null) }}
+            style={{ flex: '1 1 160px', minWidth: 130, borderRadius: 10 }}
+            autoFocus
+            required
+          />
+          {/* Registration Number */}
+          <input
+            type="text"
+            className="tw-input"
+            placeholder="Reg. No. (e.g. ABC-1234)"
+            value={regInput}
+            onChange={(e) => { setRegInput(e.target.value.toUpperCase()); setError(null) }}
+            style={{ flex: '1 1 160px', minWidth: 130, borderRadius: 10 }}
+            required
+          />
+          {/* Phone Number */}
+          <input
+            type="tel"
+            className="tw-input"
+            placeholder="Phone No. (e.g. 0300-1234567)"
+            value={phoneInput}
+            onChange={(e) => { setPhoneInput(e.target.value); setError(null) }}
+            style={{ flex: '1 1 160px', minWidth: 130, borderRadius: 10 }}
+            required
+          />
+          {/* Search Button */}
+          <button
+            type="submit"
+            className="tw-btn-primary"
+            disabled={loading || !regInput.trim() || !phoneInput.trim() || !nameInput.trim()}
+            style={{ borderRadius: 10, padding: '0 1.4rem', height: 46, fontSize: '0.9rem', flexShrink: 0, whiteSpace: 'nowrap' }}
+          >
+            {loading ? <Spinner size="sm" animation="border" /> : <><Search size={15} style={{ marginRight: 6 }} />Search</>}
+          </button>
+        </div>
       </form>
 
       {/* ── Error state ────────────────────────────────────────────── */}

@@ -215,7 +215,15 @@ export default function JCPanel() {
 
               const advisorEmail = car.serviceAdvisor ? car.serviceAdvisor.email : 'Unassigned';
               const techName = car.assignedMechanic ? car.assignedMechanic.name : 'Unassigned';
-              const bayName = car.assignedMechanic && car.assignedMechanic.bayName ? car.assignedMechanic.bayName : 'Unassigned';
+
+              // Derive bay from stage technicians (covers per-stage allocation)
+              const stageBays = (car.stages || [])
+                .map(s => s.assignedTechnician?.bayName)
+                .filter(Boolean)
+              const uniqueBays = [...new Set(stageBays)]
+              const bayName = uniqueBays.length > 0
+                ? uniqueBays.join(', ')
+                : (car.assignedMechanic?.bayName || 'Unassigned')
 
               return (
                 <div key={car._id} style={{ 
@@ -236,7 +244,12 @@ export default function JCPanel() {
                       <div className="tw-stats-grid" style={{ gap: '1.5rem', alignItems: 'center', fontSize: '0.8rem', color: '#475569' }}>
                         <div><span style={{ color: '#94A3B8' }}>Customer:</span> <strong style={{ color: '#0F172A' }}>{car.customerName}</strong></div>
                         <div style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}><span style={{ color: '#94A3B8' }}>Advisor:</span> {advisorEmail}</div>
-                        <div><span style={{ color: '#94A3B8' }}>Bay:</span> {bayName}</div>
+                        <div>
+                          <span style={{ color: '#94A3B8' }}>Bay:</span>{' '}
+                          <span style={{ color: uniqueBays.length > 0 ? '#0F172A' : '#94A3B8', fontWeight: uniqueBays.length > 0 ? 700 : 400 }}>
+                            {bayName}
+                          </span>
+                        </div>
                         <div><span style={{ color: '#94A3B8' }}>Est:</span> {car.totalEstimatedMinutes > 0 ? `${car.totalEstimatedMinutes} mins` : '-'}</div>
                       </div>
 

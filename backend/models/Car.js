@@ -20,6 +20,7 @@ const CarSchema = new mongoose.Schema(
     },
     assignedMechanic: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
     serviceAdvisor:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+    readyAt:          { type: Date, default: null }, // When car was marked ready for pickup
   },
   { timestamps: true }
 );

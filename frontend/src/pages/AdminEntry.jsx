@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Car, Clock, CheckCircle2, CircleDot,
   PlusCircle, RefreshCw, Eye, X, AlertCircle, Trash2, Archive,
   Settings, Users, UserPlus, Shield, Wrench, UserCircle2,
-  LogOut, ChevronRight, Download, Menu, Activity, Edit, MapPin,
+  LogOut, ChevronRight, Menu, Activity, Edit, MapPin,
   Crosshair, Droplets, Home
 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -922,65 +922,8 @@ export default function AdminDashboard() {
   const customers = staff.filter(u => u.role === 'customer').length
   const dateStr   = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
-  const exportReport = () => {
-    const esc = v => `"${String(v ?? '').replace(/"/g, '""')}"`
-    const now = new Date()
-    const rows = []
 
-    // ── Header
-    rows.push([esc('TOYOTA WORKSHOP — SERVICE REPORT')])
-    rows.push([esc(`Generated: ${now.toLocaleString()}`)])
-    rows.push([])
 
-    // ── Summary
-    rows.push([esc('=== WORKSHOP SUMMARY ===')])
-    rows.push([esc('Metric'), esc('Count')])
-    rows.push([esc('Total Vehicles'),    esc(stats.total)])
-    rows.push([esc('In Service'),        esc(stats.inService)])
-    rows.push([esc('Ready for Pickup'),  esc(stats.ready)])
-    rows.push([esc('Pending'),           esc(stats.pending)])
-    rows.push([esc('Total Staff'),       esc(staff.length)])
-    rows.push([esc('Mechanics'),         esc(mechanics)])
-    rows.push([esc('Customers'),         esc(customers)])
-    rows.push([])
-
-    // ── Vehicles
-    rows.push([esc('=== VEHICLES ===')])
-    rows.push([esc('Reg Number'), esc('Customer Name'), esc('Car Model'), esc('Status'), esc('Progress %'), esc('Current Stage'), esc('Feedback Rating'), esc('Feedback Comment'), esc('Created')])
-    cars.forEach(c => {
-      rows.push([
-        esc(c.regNumber),
-        esc(c.customerName),
-        esc(c.carModel),
-        esc(c.status),
-        esc(c.progress ?? 0),
-        esc(c.currentStage ?? '—'),
-        esc(c.feedback?.rating ?? ''),
-        esc(c.feedback?.comment ?? ''),
-        esc(c.createdAt ? new Date(c.createdAt).toLocaleDateString() : ''),
-      ])
-    })
-    rows.push([])
-
-    // ── Staff
-    rows.push([esc('=== STAFF ACCOUNTS ===')])
-    rows.push([esc('Name'), esc('Email'), esc('Role'), esc('Created')])
-    staff.forEach(u => {
-      rows.push([esc(u.name), esc(u.email), esc(u.role), esc(u.createdAt ? new Date(u.createdAt).toLocaleDateString() : '')])
-    })
-
-    const csv = rows.map(r => r.join(',')).join('\r\n')
-    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' })
-    const url  = URL.createObjectURL(blob)
-    const a    = document.createElement('a')
-    a.href     = url
-    a.download = `toyota-workshop-report-${now.toISOString().slice(0,10)}.csv`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    showToast('Report exported successfully.')
-  }
 
   const NAV = [
     { id: 'dashboard', icon: LayoutDashboard, label: 'Dashboard' },
@@ -1150,10 +1093,7 @@ export default function AdminDashboard() {
                     <h2 className="admin-welcome-text" style={{ margin: '0 0 2px', fontWeight: 800, fontSize: '1.55rem', color: '#0F172A' }}>Welcome back, Admin! 👋</h2>
                     <p style={{ margin: 0, color: '#64748B', fontSize: '0.88rem' }}>Here's what's happening at your workshop today.</p>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <button onClick={exportReport} style={{ background: 'linear-gradient(135deg,#EB0A1E,#A00010)', border: 'none', borderRadius: 9, padding: '9px 16px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 7, fontSize: '0.83rem', color: '#fff', fontWeight: 700, boxShadow: '0 4px 14px rgba(235,10,30,0.3)' }}><Download size={14} /> Export Report</button>
-                    <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 9, padding: '7px 13px', fontSize: '0.78rem', color: '#475569', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>📅 {dateStr}</div>
-                  </div>
+                  <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 9, padding: '7px 13px', fontSize: '0.78rem', color: '#475569', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 6 }}>📅 {dateStr}</div>
                 </div>
 
                 {/* Banner removed */}
@@ -1163,12 +1103,12 @@ export default function AdminDashboard() {
                   {[
                     { label: 'Total Vehicles',   val: stats.total,     icon: Car,          bg: '#EB0A1E', sub: 'Registered in system' },
                     { label: 'In Service',        val: stats.inService, icon: Clock,        bg: '#EA580C', sub: 'Needs attention' },
-                    { label: 'Ready for Pickup',  val: stats.ready,     icon: CheckCircle2, bg: '#16A34A', sub: '↑ +22% from last month' },
+                    { label: 'Ready for Pickup',  val: stats.ready,     icon: CheckCircle2, bg: '#16A34A', sub: 'Awaiting customer collection' },
                     { label: 'Pending',           val: stats.pending,   icon: CircleDot,    bg: '#64748B', sub: 'Awaiting service start' },
                     { label: 'Alignment',         val: countAlign,      icon: Crosshair,    bg: '#9333EA', sub: 'Currently queuing' },
                     { label: 'Washing',           val: countWash,       icon: Droplets,     bg: '#0891B2', sub: 'Currently queued' },
                     { label: 'Delivered Today',   val: countDelivered,  icon: Home,         bg: '#475569', sub: 'Completed and gone' },
-                    { label: 'Total Staff',    val: staff.length, icon: Users,       bg: '#1A0508', sub: 'All accounts' },
+                    { label: 'Total Staff',    val: staff.filter(u => u.role !== 'customer').length, icon: Users, bg: '#1A0508', sub: 'Admin, JC, Advisor, Mechanic' },
                     { label: 'Mechanics',      val: mechanics,    icon: Wrench,      bg: '#B00010', sub: 'Active mechanics' },
                     { label: 'Advisors',       val: advisors,     icon: Activity,    bg: '#2563EB', sub: 'Service Advisors' },
                     { label: 'Job Controllers',val: jcs,          icon: LayoutDashboard, bg: '#D97706', sub: 'Active JC staff' },
@@ -1205,7 +1145,7 @@ export default function AdminDashboard() {
                   ) : (
                     <div style={{ overflowX: 'auto' }}>
                       <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead><tr>{['Reg. Number', 'Customer', 'Advisor', 'Bay / Tech', 'Status', 'Jobs', 'Est. Time'].map(h => <TH key={h}>{h}</TH>)}</tr></thead>
+                        <thead><tr>{['Reg. Number', 'Customer', 'Advisor', 'Date & Time', 'Status', 'Jobs', 'Est. Time'].map(h => <TH key={h}>{h}</TH>)}</tr></thead>
                         <tbody>
                           {activeCars.slice(0, 8).map((car, i) => {
                             const style = getBadgeStyle(car.currentStage);
@@ -1226,7 +1166,7 @@ export default function AdminDashboard() {
                                 </td>
                                 <td style={{ padding: '0.75rem 1rem', fontWeight: 500, color: '#0F172A', fontSize: '0.85rem' }}>{car.customerName}</td>
                                 <td style={{ padding: '0.75rem 1rem', color: '#64748B', fontSize: '0.83rem' }}>{car.serviceAdvisor?.name || '—'}</td>
-                                <td style={{ padding: '0.75rem 1rem', color: '#64748B', fontSize: '0.83rem' }}>{car.assignedMechanic?.bayName || '-'} / {car.assignedMechanic?.name || 'Unassigned'}</td>
+                                <td style={{ padding: '0.75rem 1rem', color: '#64748B', fontSize: '0.78rem' }}>{car.createdAt ? new Date(car.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
                                 <td style={{ padding: '0.75rem 1rem' }}>
                                   <span style={{ background: style.bg, color: style.color, padding: '4px 12px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, letterSpacing: '0.02em', whiteSpace: 'nowrap' }}>
                                     {dispStatus}
@@ -1276,13 +1216,13 @@ export default function AdminDashboard() {
               {!loadingCars && filteredCars.length > 0 && (
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead><tr>{['REG #','CUSTOMER','MODEL','CURRENT STAGE','PROGRESS','STATUS','MECHANIC','ACTIONS'].map(h => <TH key={h}>{h}</TH>)}</tr></thead>
+                    <thead><tr>{['REG #','CUSTOMER','FILED DATE','CURRENT STAGE','PROGRESS','STATUS','ACTIONS'].map(h => <TH key={h}>{h}</TH>)}</tr></thead>
                     <tbody>
                       {filteredCars.map((car, i) => (
                         <tr key={car._id} style={{ borderTop: '1px solid #F1F5F9', background: i % 2 ? '#FAFBFC' : '#fff' }}>
                           <td style={{ padding: '0.8rem 1rem' }}><span style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: '0.85rem', color: '#0F172A' }}>{car.regNumber}</span></td>
                           <td style={{ padding: '0.8rem 1rem', fontWeight: 500, color: '#0F172A', fontSize: '0.85rem' }}>{car.customerName}</td>
-                          <td style={{ padding: '0.8rem 1rem', color: '#64748B', fontSize: '0.83rem' }}>{car.carModel}</td>
+                          <td style={{ padding: '0.8rem 1rem', color: '#64748B', fontSize: '0.78rem', whiteSpace: 'nowrap' }}>{car.createdAt ? new Date(car.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}</td>
                           <td style={{ padding: '0.8rem 1rem' }}>
                             <span style={{ background: '#F1F5F9', color: '#475569', borderRadius: 20, fontSize: '0.72rem', fontWeight: 600, padding: '2px 9px', maxWidth: 150, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', display: 'inline-block' }} title={car.currentStage}>{car.currentStage}</span>
                           </td>
@@ -1293,11 +1233,6 @@ export default function AdminDashboard() {
                             </div>
                           </td>
                           <td style={{ padding: '0.8rem 1rem' }}><StatusBadge status={car.status} /></td>
-                          <td style={{ padding: '0.8rem 1rem' }}>
-                            {car.assignedMechanic
-                              ? <span style={{ fontSize: '0.77rem', fontWeight: 600, color: '#B00010', background: '#FFE4E6', borderRadius: 20, padding: '2px 9px' }}>{car.assignedMechanic.name}</span>
-                              : <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Unassigned</span>}
-                          </td>
                           <td style={{ padding: '0.8rem 1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                               <button onClick={() => { setDetailCar(car); setDeleteConfirmId(null); setArchiveConfirmId(null); }} style={{ background: 'none', border: `1px solid ${ACTIVE}30`, borderRadius: 7, padding: '4px 9px', cursor: 'pointer', fontSize: '0.75rem', fontWeight: 600, color: ACTIVE, display: 'flex', alignItems: 'center', gap: 4 }}><Eye size={12} /> View</button>
