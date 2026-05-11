@@ -1,7 +1,7 @@
 {
   "name": "toyota-workshop-tracker",
   "version": "1.0.0",
-  "description": "Toyota Workshop Tracker – MERN monorepo",
+  "description": "Toyota Chenab Motors Tracker – MERN monorepo",
   "private": true,
   "scripts": {
     "build": "npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend",

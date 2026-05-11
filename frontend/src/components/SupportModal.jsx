@@ -20,12 +20,12 @@ const PRIVACY_SECTIONS = [
   { title: '2. How We Use Your Information', body: `Information is used exclusively to:\n• Display real-time service status to the vehicle owner\n• Allow workshop staff to manage service stages\n• Generate aggregate analytics for workshop performance\n• Send optional email updates if you subscribe\n\nWe do not sell or distribute your data to third parties.` },
   { title: '3. Data Storage & Security', body: `All data is stored in a secure, encrypted cloud database (MongoDB Atlas).\n• Bcrypt password hashing for all user accounts\n• JWT-based authentication with expiring tokens\n• HTTPS encryption for all data in transit\n• Role-based access control (customer, mechanic, admin)` },
   { title: '4. Cookies', body: 'We use minimal, functional cookies only to maintain authenticated sessions for logged-in workshop users. We do not use tracking, advertising, or analytics cookies. Customers using the public tracker are not tracked via cookies.' },
-  { title: '5. Your Rights', body: `You have the right to:\n• Request access to any personal data we hold\n• Request correction or deletion of your data\n• Withdraw consent for newsletter communications at any time\n\nContact us at privacy@toyotaworkshop.com to exercise these rights.` },
+  { title: '5. Your Rights', body: `You have the right to:\n• Request access to any personal data we hold\n• Request correction or deletion of your data\n• Withdraw consent for newsletter communications at any time\n\nContact us at privacy@toyotachenabmotors.com to exercise these rights.` },
   { title: '6. Changes to This Policy', body: 'We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated date. Continued use of the service after changes constitutes acceptance.' },
 ]
 
 const TERMS_SECTIONS = [
-  { title: '1. Acceptance of Terms', body: 'By accessing or using the Toyota Workshop Service Tracker, you agree to be bound by these Terms. If you do not agree, please discontinue use immediately.' },
+  { title: '1. Acceptance of Terms', body: 'By accessing or using the Toyota Chenab Motors Service Tracker, you agree to be bound by these Terms. If you do not agree, please discontinue use immediately.' },
   { title: '2. Description of Service', body: `The Service provides:\n• A public vehicle tracking interface for customers\n• An authenticated portal for mechanics to update service stages\n• An admin panel for workshop managers\n\nThe Service is provided "as is" and may be updated or discontinued at any time.` },
   { title: '3. User Accounts', body: `Workshop staff must maintain the confidentiality of login credentials. You agree not to:\n• Share credentials with unauthorised individuals\n• Use another user's account without permission\n• Attempt to access admin functionality without authorisation` },
   { title: '4. Acceptable Use', body: `You agree not to:\n• Provide false registration numbers or misleading information\n• Attempt to gain unauthorised access to protected routes\n• Use automated bots or scripts to scrape the application\n• Engage in any activity that violates applicable laws` },
@@ -34,7 +34,7 @@ const TERMS_SECTIONS = [
 ]
 
 const INFO_CARDS = [
-  { icon: Mail,    color: '#2563EB', bg: '#EFF6FF', title: 'Email Us',   detail: 'support@toyotaworkshop.com', sub: 'We reply within 24 hours' },
+  { icon: Mail,    color: '#2563EB', bg: '#EFF6FF', title: 'Email Us',   detail: 'support@toyotachenabmotors.com', sub: 'We reply within 24 hours' },
   { icon: Phone,   color: '#16A34A', bg: '#F0FDF4', title: 'Call Us',    detail: '+60 3-1234 5678',             sub: 'Mon – Fri, 8 AM – 6 PM' },
   { icon: MapPin,  color: TOYOTA_RED,bg: '#FFF0F1', title: 'Visit Us',   detail: '25 Jalan Workshop, KL',       sub: 'Toyota Authorised Centre' },
   { icon: Clock,   color: '#D97706', bg: '#FFFBEB', title: 'Hours',      detail: 'Mon – Sat: 8 AM – 6 PM',      sub: 'Closed Sundays & PH' },
@@ -212,12 +212,12 @@ export default function SupportModal({ which, onClose }) {
               <h2 style={{ fontWeight: 800, fontSize: '1.15rem', color: '#0F172A', marginBottom: 4 }}>Privacy Policy</h2>
               <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginBottom: '1.25rem' }}>Last revised: March 2026</p>
               <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.75, marginBottom: '1.5rem' }}>
-                Toyota Workshop Service Tracker is committed to protecting your privacy. This policy explains what information we collect, how we use it, and your rights.
+                Toyota Chenab Motors Service Tracker is committed to protecting your privacy. This policy explains what information we collect, how we use it, and your rights.
               </p>
               {PRIVACY_SECTIONS.map((s, i) => <Section key={i} {...s} />)}
               <div style={{ marginTop: '1rem', padding: '1rem 1.25rem', background: '#FFF0F1', borderRadius: 12, border: '1px solid rgba(235,10,30,0.15)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span style={{ fontSize: '0.85rem', color: '#374151' }}>Questions about this policy?</span>
-                <a href="mailto:privacy@toyotaworkshop.com" style={{ fontSize: '0.85rem', fontWeight: 700, color: TOYOTA_RED, textDecoration: 'none' }}>privacy@toyotaworkshop.com</a>
+                <a href="mailto:privacy@toyotachenabmotors.com" style={{ fontSize: '0.85rem', fontWeight: 700, color: TOYOTA_RED, textDecoration: 'none' }}>privacy@toyotachenabmotors.com</a>
               </div>
             </div>
           )}
@@ -228,12 +228,12 @@ export default function SupportModal({ which, onClose }) {
               <h2 style={{ fontWeight: 800, fontSize: '1.15rem', color: '#0F172A', marginBottom: 4 }}>Terms of Service</h2>
               <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginBottom: '1.25rem' }}>Effective date: March 2026</p>
               <p style={{ fontSize: '0.875rem', color: '#475569', lineHeight: 1.75, marginBottom: '1.5rem' }}>
-                Please read these Terms carefully before using the Toyota Workshop Service Tracker. By using the platform, you agree to be bound by these terms.
+                Please read these Terms carefully before using the Toyota Chenab Motors Service Tracker. By using the platform, you agree to be bound by these terms.
               </p>
               {TERMS_SECTIONS.map((s, i) => <Section key={i} {...s} />)}
               <div style={{ marginTop: '1rem', padding: '1rem 1.25rem', background: '#FFF0F1', borderRadius: 12, border: '1px solid rgba(235,10,30,0.15)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span style={{ fontSize: '0.85rem', color: '#374151' }}>Questions about these terms?</span>
-                <a href="mailto:legal@toyotaworkshop.com" style={{ fontSize: '0.85rem', fontWeight: 700, color: TOYOTA_RED, textDecoration: 'none' }}>legal@toyotaworkshop.com</a>
+                <a href="mailto:legal@toyotachenabmotors.com" style={{ fontSize: '0.85rem', fontWeight: 700, color: TOYOTA_RED, textDecoration: 'none' }}>legal@toyotachenabmotors.com</a>
               </div>
             </div>
           )}

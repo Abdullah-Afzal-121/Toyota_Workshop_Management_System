@@ -85,7 +85,7 @@ export default function Navbar() {
             <img src="/toyota-logo.png" alt="Toyota" style={{ width: 42, height: 42, borderRadius: 10, flexShrink: 0, boxShadow: '0 2px 8px rgba(235,10,30,0.35)' }} />
             <div>
               <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.2 }}>
-                Toyota Workshop
+                Toyota Chenab Motors
               </div>
               <div style={{ fontSize: '0.62rem', color: '#94A3B8', lineHeight: 1, fontWeight: 500 }}>
                 Service Tracker

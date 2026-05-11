@@ -37,12 +37,12 @@ async function sendPasswordResetEmail(toEmail, name, resetUrl) {
     return;
   }
 
-  const from = process.env.SMTP_FROM || `"Toyota Workshop" <${process.env.SMTP_USER}>`;
+  const from = process.env.SMTP_FROM || `"Toyota Chenab Motors" <${process.env.SMTP_USER}>`;
 
   await transporter.sendMail({
     from,
     to: toEmail,
-    subject: 'Reset your Toyota Workshop password',
+    subject: 'Reset your Toyota Chenab Motors password',
     html: `
       <!DOCTYPE html>
       <html>
@@ -53,7 +53,7 @@ async function sendPasswordResetEmail(toEmail, name, resetUrl) {
             </div>
             <h2 style="color:#0F172A;font-size:1.4rem;margin:0 0 0.5rem;">Hi ${name},</h2>
             <p style="color:#475569;line-height:1.7;margin:0 0 1.5rem;">
-              We received a request to reset your password for your Toyota Workshop account.
+              We received a request to reset your password for your Toyota Chenab Motors account.
               Click the button below to choose a new password. This link expires in <strong>1 hour</strong>.
             </p>
             <div style="text-align:center;margin:2rem 0;">
@@ -94,12 +94,12 @@ async function sendOTPEmail(toEmail, name, otp) {
     return;
   }
 
-  const from = process.env.SMTP_FROM || `"Toyota Workshop" <${process.env.SMTP_USER}>`;
+  const from = process.env.SMTP_FROM || `"Toyota Chenab Motors" <${process.env.SMTP_USER}>`;
 
   await transporter.sendMail({
     from,
     to: toEmail,
-    subject: 'Your Toyota Workshop Verification Code',
+    subject: 'Your Toyota Chenab Motors Verification Code',
     html: `
       <!DOCTYPE html>
       <html>

@@ -9,7 +9,7 @@ const INFO_CARDS = [
   {
     icon: Mail,    color: '#2563EB', bg: '#EFF6FF',
     title: 'Email Us',
-    detail: 'support@toyotaworkshop.com',
+    detail: 'support@toyotachenabmotors.com',
     sub: 'We reply within 24 hours',
   },
   {

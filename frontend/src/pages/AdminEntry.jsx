@@ -960,7 +960,7 @@ export default function AdminDashboard() {
           </div>
           {sidebarOpen && (
             <div>
-              <div style={{ color: '#fff', fontWeight: 800, fontSize: '1rem', lineHeight: 1.2 }}>Toyota</div>
+              <div style={{ color: '#fff', fontWeight: 800, fontSize: '0.85rem', lineHeight: 1.2 }}>Toyota Chenab Motors</div>
               <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.68rem', letterSpacing: '0.06em' }}>Admin Portal</div>
             </div>
           )}
@@ -1024,7 +1024,7 @@ export default function AdminDashboard() {
                 <img src="/toyota-logo.png" alt="Toyota" style={{ width: '100%', height: '100%', objectFit: 'contain', display: 'block' }} />
               </div>
               <div>
-                <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.2 }}>Toyota Workshop</div>
+                <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.2 }}>Toyota Chenab Motors</div>
                 <div style={{ fontSize: '0.7rem', color: '#94A3B8', lineHeight: 1 }}>{activePage === 'dashboard' ? 'Dashboard' : activePage === 'vehicles' ? 'Vehicles' : 'Staff Accounts'}</div>
               </div>
             </div>

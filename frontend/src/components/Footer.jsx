@@ -58,7 +58,7 @@ export default function Footer() {
             <img src="/toyota-logo.png" alt="Toyota" style={{ width: 42, height: 42, borderRadius: 10, boxShadow: '0 2px 8px rgba(235,10,30,0.4)', flexShrink: 0 }} />
             <div>
               <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#F1F5F9', lineHeight: 1.2 }}>
-                Toyota Workshop
+                Toyota Chenab Motors
               </div>
               <div style={{ fontSize: '0.62rem', color: '#64748B', lineHeight: 1 }}>Service Tracker</div>
             </div>
@@ -216,7 +216,7 @@ export default function Footer() {
         }}
       >
         <span style={{ fontSize: '0.8rem', color: '#475569' }}>
-          © {new Date().getFullYear()} Toyota Workshop Tracker. All rights reserved.
+          © {new Date().getFullYear()} Toyota Chenab Motors Tracker. All rights reserved.
         </span>
         <span style={{ fontSize: '0.8rem', color: '#334155' }}>
           Built for modern workshops

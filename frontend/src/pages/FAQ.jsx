@@ -92,7 +92,7 @@ export default function FAQ() {
             Frequently Asked Questions
           </h1>
           <p style={{ color: '#64748B', maxWidth: 480, margin: '0 auto', fontSize: '0.95rem', lineHeight: 1.7 }}>
-            Everything you need to know about the Toyota Workshop Service Tracker.
+            Everything you need to know about the Toyota Chenab Motors Service Tracker.
           </p>
         </div>
 
@@ -115,7 +115,7 @@ export default function FAQ() {
             <div style={{ fontSize: '0.875rem', color: '#64748B' }}>Our team is happy to help you directly.</div>
           </div>
           <a
-            href="mailto:support@toyotaworkshop.com"
+            href="mailto:support@toyotachenabmotors.com"
             style={{
               background: TOYOTA_RED, color: '#fff',
               padding: '0.6rem 1.4rem', borderRadius: 9,

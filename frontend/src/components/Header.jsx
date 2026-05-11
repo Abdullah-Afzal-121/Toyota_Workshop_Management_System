@@ -38,7 +38,7 @@ export default function Header() {
             <img src="/toyota-logo.png" alt="Toyota" style={{ width: 38, height: 38, borderRadius: 8 }} />
             <div className="d-none d-md-block">
               <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#1E293B', lineHeight: 1.2 }}>
-                Toyota Workshop
+                Toyota Chenab Motors
               </div>
               <div style={{ fontSize: '0.65rem', color: '#94A3B8', lineHeight: 1 }}>
                 Service Tracker

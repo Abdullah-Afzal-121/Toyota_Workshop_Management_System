@@ -99,7 +99,7 @@ export default function AdminLogin() {
             Admin Portal
           </h1>
           <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem', margin: '0.4rem 0 0', textAlign: 'center' }}>
-            Toyota Workshop Tracker — Authorized Access Only
+            Toyota Chenab Motors Tracker — Authorized Access Only
           </p>
         </div>
 

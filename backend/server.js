@@ -62,7 +62,7 @@ app.use('/api/admin',    require('./routes/admin'));
 app.use('/api/mechanic', require('./routes/mechanic'));
 
 // ── Root health-check ────────────────────────────────────────────────────────
-app.get('/', (_req, res) => res.json({ message: 'Toyota Workshop API is running 🚗' }));
+app.get('/', (_req, res) => res.json({ message: 'Toyota Chenab Motors API is running 🚗' }));
 
 // ── Start HTTP server (works for both local dev and Railway/production) ──────
 const PORT = process.env.PORT || 5000;

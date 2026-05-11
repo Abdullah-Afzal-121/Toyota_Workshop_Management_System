@@ -6,13 +6,13 @@ const TOYOTA_RED = '#EB0A1E'
 const SECTIONS = [
   {
     title: '1. Acceptance of Terms',
-    body: `By accessing or using the Toyota Workshop Service Tracker ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please discontinue use of the Service immediately.
+    body: `By accessing or using the Toyota Chenab Motors Service Tracker ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please discontinue use of the Service immediately.
 
 These terms apply to all users — including customers tracking their vehicle, mechanics managing service stages, and administrators operating the workshop portal.`,
   },
   {
     title: '2. Description of Service',
-    body: `Toyota Workshop Service Tracker provides:
+    body: `Toyota Chenab Motors Service Tracker provides:
 • A public vehicle tracking interface allowing customers to view the service progress of their vehicle using a registration number
 • An authenticated workshop portal for mechanics to update service stages, set time estimates, and mark work complete
 • An admin panel for workshop managers to register vehicles, manage stages, and view feedback
@@ -41,13 +41,13 @@ Accounts found to be in violation may be suspended or permanently removed.`,
   },
   {
     title: '5. Intellectual Property',
-    body: `All content, design, code, and assets within the Toyota Workshop Service Tracker are the intellectual property of the workshop operator or its licensors. You may not copy, reproduce, distribute, or create derivative works without express written consent.
+    body: `All content, design, code, and assets within the Toyota Chenab Motors Service Tracker are the intellectual property of the workshop operator or its licensors. You may not copy, reproduce, distribute, or create derivative works without express written consent.
 
 Customer-submitted feedback and data remain the property of the submitting party but grant us a non-exclusive licence to display it within the service dashboard.`,
   },
   {
     title: '6. Limitation of Liability',
-    body: `To the fullest extent permitted by law, Toyota Workshop Service Tracker and its operators shall not be liable for:
+    body: `To the fullest extent permitted by law, Toyota Chenab Motors Service Tracker and its operators shall not be liable for:
 • Inaccurate service time estimates displayed in the tracker
 • Service delays or vehicle damage occurring at the workshop (these are the responsibility of the workshop operator)
 • Data loss due to circumstances beyond our control, including cloud outages
@@ -84,7 +84,7 @@ export default function TermsOfService() {
           </h1>
           <p style={{ color: '#94A3B8', fontSize: '0.83rem' }}>Effective date: March 2026</p>
           <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: 1.75, marginTop: '0.75rem', maxWidth: 640 }}>
-            Please read these Terms of Service carefully before using the Toyota Workshop Service Tracker.
+            Please read these Terms of Service carefully before using the Toyota Chenab Motors Service Tracker.
             By using the platform, you agree to be bound by these terms.
           </p>
         </div>
@@ -102,8 +102,8 @@ export default function TermsOfService() {
         {/* Contact line */}
         <div style={{ marginTop: '2rem', padding: '1.25rem 1.5rem', background: '#FFF0F1', borderRadius: 12, border: '1px solid rgba(235,10,30,0.15)', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>Questions about these terms?</span>
-          <a href="mailto:legal@toyotaworkshop.com" style={{ fontSize: '0.875rem', fontWeight: 700, color: TOYOTA_RED, textDecoration: 'none' }}>
-            legal@toyotaworkshop.com
+          <a href="mailto:legal@toyotachenabmotors.com" style={{ fontSize: '0.875rem', fontWeight: 700, color: TOYOTA_RED, textDecoration: 'none' }}>
+            legal@toyotachenabmotors.com
           </a>
         </div>
       </main>

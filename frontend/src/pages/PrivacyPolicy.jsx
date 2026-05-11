@@ -56,7 +56,7 @@ We encourage you to review their policies if relevant to your use.`,
 • Withdraw consent for newsletter communications at any time
 • Lodge a complaint with a relevant data protection authority
 
-To exercise any of these rights, contact us at privacy@toyotaworkshop.com.`,
+To exercise any of these rights, contact us at privacy@toyotachenabmotors.com.`,
   },
   {
     title: '7. Changes to This Policy',
@@ -81,7 +81,7 @@ export default function PrivacyPolicy() {
           </h1>
           <p style={{ color: '#94A3B8', fontSize: '0.83rem' }}>Last revised: March 2026</p>
           <p style={{ color: '#475569', fontSize: '0.95rem', lineHeight: 1.75, marginTop: '0.75rem', maxWidth: 640 }}>
-            Toyota Workshop Service Tracker ("we", "our", "us") is committed to protecting your privacy.
+            Toyota Chenab Motors Service Tracker ("we", "our", "us") is committed to protecting your privacy.
             This policy explains what information we collect, how we use it, and your rights.
           </p>
         </div>
@@ -99,8 +99,8 @@ export default function PrivacyPolicy() {
         {/* Contact line */}
         <div style={{ marginTop: '2rem', padding: '1.25rem 1.5rem', background: '#FFF0F1', borderRadius: 12, border: '1px solid rgba(235,10,30,0.15)', display: 'flex', flexWrap: 'wrap', gap: 8, alignItems: 'center', justifyContent: 'space-between' }}>
           <span style={{ fontSize: '0.875rem', color: '#374151', fontWeight: 500 }}>Questions about this policy?</span>
-          <a href="mailto:privacy@toyotaworkshop.com" style={{ fontSize: '0.875rem', fontWeight: 700, color: TOYOTA_RED, textDecoration: 'none' }}>
-            privacy@toyotaworkshop.com
+          <a href="mailto:privacy@toyotachenabmotors.com" style={{ fontSize: '0.875rem', fontWeight: 700, color: TOYOTA_RED, textDecoration: 'none' }}>
+            privacy@toyotachenabmotors.com
           </a>
         </div>
       </main>
