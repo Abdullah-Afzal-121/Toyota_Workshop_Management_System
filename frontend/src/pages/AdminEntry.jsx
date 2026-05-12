@@ -17,8 +17,9 @@ const ACTIVE  = '#EB0A1E'
 
 const STATUS_META = {
   pending:      { label: 'Waiting for Bay', bg: '#FEF3C7', color: '#D97706', dot: '#F59E0B' },
-  'in-service': { label: 'In Service', bg: '#FFF7ED', color: '#EA580C', dot: '#F97316' },
+  'in-service': { label: 'In Service',      bg: '#FFF7ED', color: '#EA580C', dot: '#F97316' },
   ready:        { label: 'Delivery Bay',    bg: '#F0FDF4', color: '#16A34A', dot: '#22C55E' },
+  archived:     { label: 'Delivered',       bg: '#F1F5F9', color: '#475569', dot: '#94A3B8' },
 }
 
 const ROLE_CONFIG = {
@@ -29,7 +30,7 @@ const ROLE_CONFIG = {
   admin:    { label: 'Admin',    color: '#1A0508', bg: '#F3D0D4', icon: Shield },
 }
 
-const INITIAL_CAR_FORM = { customerName: '', carModel: '', regNumber: '', assignedMechanic: '', needsAlignment: false, needsWashing: false }
+const INITIAL_CAR_FORM = { customerName: '', carModel: '', regNumber: '', assignedMechanic: '' }
 
 const inp = {
   width: '100%', background: '#F8FAFC', border: '1px solid #E2E8F0',
@@ -145,12 +146,12 @@ function AddCarSheet({ open, onClose, onCarAdded }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const { customerName, carModel, regNumber, assignedMechanic, needsAlignment, needsWashing } = form
+    const { customerName, carModel, regNumber, assignedMechanic } = form
     if (!customerName.trim() || !carModel.trim() || !regNumber.trim()) { setError('All fields are required.'); return }
     if (!assignedMechanic) { setError('Please assign a mechanic.'); return }
     setSub(true)
     try {
-      const { data } = await axios.post('/api/admin/add-car', { customerName: customerName.trim(), carModel: carModel.trim(), regNumber: regNumber.trim().toUpperCase(), assignedMechanic, needsAlignment, needsWashing })
+      const { data } = await axios.post('/api/admin/add-car', { customerName: customerName.trim(), carModel: carModel.trim(), regNumber: regNumber.trim().toUpperCase(), assignedMechanic })
       onCarAdded(data); setForm(INITIAL_CAR_FORM); onClose()
     } catch (err) { setError(err.response?.data?.message || 'Failed to add car.') }
     finally { setSub(false) }
@@ -184,18 +185,7 @@ function AddCarSheet({ open, onClose, onCarAdded }) {
           </select>
           {mechanics.length === 0 && <p style={{ fontSize: '0.73rem', color: '#94A3B8', margin: '4px 0 0' }}>No mechanics found. Add one in Staff Management first.</p>}
         </FieldGroup>
-        <div style={{ background: '#F8FAFC', border: '1px dashed #CBD5E1', borderRadius: 10, padding: '0.75rem 1rem' }}>
-          <p style={{ fontSize: '0.72rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.06em', margin: '0 0 0.5rem' }}>Optional Workflow Stages</p>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: '#374151', cursor: 'pointer', marginBottom: 6 }}>
-            <input type="checkbox" checked={form.needsAlignment} onChange={e => setForm(p => ({ ...p, needsAlignment: e.target.checked }))} />
-            Include Alignment Process
-          </label>
-          <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: '0.8rem', color: '#374151', cursor: 'pointer', marginBottom: 6 }}>
-            <input type="checkbox" checked={form.needsWashing} onChange={e => setForm(p => ({ ...p, needsWashing: e.target.checked }))} />
-            Include Washing Process
-          </label>
-          <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '8px 0 0' }}>Use the ⚙ button later to add custom production jobs.</p>
-        </div>
+        <p style={{ fontSize: '0.75rem', color: '#64748B', margin: '8px 0 0' }}>Use the ⚙ button to add production jobs.</p>
       </form>
     </Sheet>
   )
@@ -1075,16 +1065,19 @@ export default function AdminDashboard() {
               if (s.includes('production')) return { bg: '#FEF08A', color: '#A16207' };
               if (s.includes('waiting')) return { bg: '#FFEDD5', color: '#C2410C' };
               if (s.includes('alignment')) return { bg: '#F3E8FF', color: '#7E22CE' };
-              if (s.includes('washing')) return { bg: '#CFFAFE', color: '#0E7490' };
+              if (s.includes('washing') || s.includes('wash')) return { bg: '#CFFAFE', color: '#0E7490' };
               if (s.includes('ready') || s.includes('complete')) return { bg: '#DCFCE7', color: '#15803D' };
-              return { bg: '#DBEAFE', color: '#1D4ED8' }; // Default to reception style
+              return { bg: '#DBEAFE', color: '#1D4ED8' };
             };
 
-            const countByStageMatch = (keyword) => cars.filter(c => (c.currentStage || '').toLowerCase().includes(keyword)).length;
-            const countAlign = countByStageMatch('alignment');
-            const countWash = countByStageMatch('washing');
-            const countDelivered = cars.filter(c => c.status === 'closed').length;
-            const activeCars = cars.filter(c => c.status !== 'closed');
+            // Count by stage CATEGORY — works regardless of stage display name
+            const countByCategory = (cat) => cars.filter(c =>
+              c.stages?.some(s => !s.isCompleted && (s.category || '').toUpperCase() === cat.toUpperCase())
+            ).length;
+            const countAlign = countByCategory('ALIGNMENT');
+            const countWash  = countByCategory('WASHING');
+            const countDelivered = cars.filter(c => c.status === 'archived').length;
+            const activeCars = cars.filter(c => c.status !== 'archived');
 
             return (
               <>

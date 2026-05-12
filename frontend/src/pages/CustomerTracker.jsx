@@ -31,8 +31,7 @@ const STATUS_META = {
   pending:      { label: 'Waiting for Bay', cls: 'tw-badge-gray',   icon: Circle        },
   'in-service': { label: 'In Service',      cls: 'tw-badge-orange', icon: Clock         },
   ready:        { label: 'Delivery Bay',    cls: 'tw-badge-green',  icon: CheckCircle2  },
-  delivered:    { label: 'Delivered',       cls: 'tw-badge-green',  icon: CheckCircle2  },
-  closed:       { label: 'Job Closed',      cls: 'tw-badge-gray',   icon: CheckCircle2  },
+  archived:     { label: 'Delivered',       cls: 'tw-badge-gray',   icon: CheckCircle2  },
 }
 
 // Live clock for in-progress stage elapsed time
@@ -526,8 +525,8 @@ export default function CustomerTracker() {
               })}
             </div>
 
-            {/* Feedback — only shown when car is ready / closed */}
-            {['ready', 'delivered', 'closed'].includes(data.car.status) && (
+            {/* Feedback — only shown when car is ready or archived (delivered) */}
+            {['ready', 'archived'].includes(data.car.status) && (
               <FeedbackPanel
                 regNumber={data.car.regNumber}
                 existing={data.car.feedback}

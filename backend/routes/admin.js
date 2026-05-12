@@ -16,23 +16,32 @@ const { verifyToken, requireRole } = require('../middleware/authMiddleware');
  */
 router.post('/add-car', verifyToken, requireRole('admin', 'advisor'), async (req, res) => {
   try {
-    const { customerName, carModel, regNumber, assignedMechanic, phoneNumber, needsAlignment, needsWashing } = req.body;
+    const { customerName, carModel, regNumber, assignedMechanic, phoneNumber } = req.body;
 
     if (!customerName || !carModel || !regNumber) {
       return res.status(400).json({ message: 'customerName, carModel, and regNumber are required.' });
     }
 
-    // Check for duplicate registration
-    const existing = await Car.findOne({ regNumber: regNumber.toUpperCase() });
-    if (existing) return res.status(409).json({ message: `Car with reg ${regNumber.toUpperCase()} already exists.` });
+    // Block only if an ACTIVE record with the same reg number already exists
+    // (closed/archived cars can be re-registered for a new service visit)
+    const existing = await Car.findOne({
+      regNumber: regNumber.toUpperCase(),
+      status: { $nin: ['closed', 'archived'] },
+    });
+    if (existing) return res.status(409).json({ message: `Car ${regNumber.toUpperCase()} is already active in the workshop (Status: ${existing.status}). Complete or archive it first.` });
+
+    // Auto-archive any previous 'closed' (Delivered) records for the same reg
+    // so the main list stays clean — history is still visible under "Show Archived"
+    await Car.updateMany(
+      { regNumber: regNumber.toUpperCase(), status: 'closed' },
+      { status: 'archived' }
+    );
 
     const car = await Car.create({
       customerName,
       carModel,
       regNumber: regNumber.toUpperCase(),
       phoneNumber: phoneNumber || '',
-      needsAlignment: !!needsAlignment,
-      needsWashing: !!needsWashing,
       assignedMechanic: assignedMechanic || null,
       serviceAdvisor: req.user ? req.user._id : null,
     });
@@ -42,6 +51,7 @@ router.post('/add-car', verifyToken, requireRole('admin', 'advisor'), async (req
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
+
 });
 
 /**
@@ -86,8 +96,18 @@ router.get('/cars', verifyToken, requireRole('admin', 'advisor', 'job_controller
           ? Math.round((completedCount / stages.length) * 100)
           : 0;
         const totalEstimatedMinutes = stages.reduce((sum, s) => sum + (s.estimatedMinutes || 0), 0);
+
+        // Auto-promote car status to 'ready' when all stages are complete
+        let effectiveStatus = car.status;
+        if (stages.length > 0 && progress === 100 && (car.status === 'pending' || car.status === 'in-service')) {
+          effectiveStatus = 'ready';
+          // Persist the updated status to the database
+          await Car.findByIdAndUpdate(car._id, { status: 'ready', readyAt: car.readyAt || new Date() });
+        }
+
         return { 
           ...car.toObject(), 
+          status: effectiveStatus,
           stages,
           currentStage, 
           progress, 
@@ -124,7 +144,7 @@ router.get('/cars/:carId/stages', verifyToken, requireRole('admin', 'advisor', '
  */
 router.post('/cars/:carId/stages', verifyToken, requireRole('admin', 'advisor', 'job_controller'), async (req, res) => {
   try {
-    const { stageName, estimatedMinutes } = req.body;
+    const { stageName, estimatedMinutes, category } = req.body;
     if (!stageName?.trim()) return res.status(400).json({ message: 'stageName is required.' });
     const car = await Car.findById(req.params.carId);
     if (!car) return res.status(404).json({ message: 'Car not found.' });
@@ -133,6 +153,7 @@ router.post('/cars/:carId/stages', verifyToken, requireRole('admin', 'advisor', 
     const estMin = estimatedMinutes ? parseInt(estimatedMinutes) : null;
     const stage = await ServiceStage.create({
       stageName: stageName.trim(),
+      category: (category || 'General').toUpperCase(),
       carId: req.params.carId,
       order: nextOrder,
       estimatedMinutes: estMin && estMin > 0 ? estMin : null,
@@ -154,13 +175,11 @@ router.patch('/cars/:carId', verifyToken, requireRole('admin', 'advisor'), async
     const car = await Car.findById(req.params.carId);
     if (!car) return res.status(404).json({ message: 'Car not found.' });
 
-    const { customerName, carModel, regNumber, phoneNumber, needsAlignment, needsWashing } = req.body;
+    const { customerName, carModel, regNumber, phoneNumber } = req.body;
 
     if (customerName !== undefined) car.customerName = customerName.trim();
     if (carModel     !== undefined) car.carModel     = carModel.trim() || 'N/A';
     if (phoneNumber  !== undefined) car.phoneNumber  = phoneNumber.trim();
-    if (needsAlignment !== undefined) car.needsAlignment = !!needsAlignment;
-    if (needsWashing   !== undefined) car.needsWashing   = !!needsWashing;
 
     // If reg number is changing, check for duplicate
     if (regNumber !== undefined) {
@@ -404,14 +423,18 @@ router.delete('/cars/:carId', verifyToken, requireRole('admin'), async (req, res
 /**
  * PUT /api/admin/cars/:carId/status
  * Update the status of a car (e.g. to 'closed')
+ * When set to 'closed' (Delivered), the car is automatically archived
+ * so it moves out of the active list immediately.
  */
 router.put('/cars/:carId/status', verifyToken, requireRole('admin', 'advisor', 'job_controller'), async (req, res) => {
   try {
     const { status } = req.body;
     const car = await Car.findById(req.params.carId);
     if (!car) return res.status(404).json({ message: 'Car not found.' });
-    
-    car.status = status;
+
+    // When delivered (closed), auto-archive so it leaves the active list
+    car.status = status === 'closed' ? 'archived' : status;
+
     // Track when the car first became ready for delivery
     if (status === 'ready' && !car.readyAt) {
       car.readyAt = new Date();
@@ -421,6 +444,7 @@ router.put('/cars/:carId/status', verifyToken, requireRole('admin', 'advisor', '
     await car.save();
     if (req.app.get('io')) req.app.get('io').emit('workshop_update');
     res.json({ message: 'Car status updated.', car });
+
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

@@ -4,13 +4,11 @@ const CarSchema = new mongoose.Schema(
   {
     customerName: { type: String, required: true, trim: true },
     carModel:     { type: String, required: true, trim: true },
-    regNumber:    { type: String, required: true, unique: true, uppercase: true, trim: true },
+    regNumber:    { type: String, required: true, uppercase: true, trim: true },
     phoneNumber:  { type: String, trim: true, default: '' },
-    needsAlignment: { type: Boolean, default: false },
-    needsWashing:   { type: Boolean, default: false },
     status: {
       type:    String,
-      enum:    ['pending', 'in-service', 'ready', 'closed'],
+      enum:    ['pending', 'in-service', 'ready', 'archived'],
       default: 'pending',
     },
     feedback: {

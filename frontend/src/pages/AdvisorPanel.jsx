@@ -75,7 +75,7 @@ export default function AdvisorPanel() {
 
   // Registration Form
   const [showAdd, setShowAdd] = useState(false)
-  const [form, setForm] = useState({ customerName: '', carModel: '', regNumber: '', phone: '', needsAlignment: false, needsWashing: false, selectedJobs: [] })
+  const [form, setForm] = useState({ customerName: '', carModel: '', regNumber: '', phone: '', selectedJobs: [] })
   const [submitting, setSubmitting] = useState(false)
 
   const [jobMasters, setJobMasters] = useState([])
@@ -92,8 +92,8 @@ export default function AdvisorPanel() {
         axios.get('/api/admin/cars'),
         axios.get('/api/admin/job-master')
       ])
-      setCars(carsRes.data.filter(c => c.status !== 'closed'))
-      setHistoryCars(carsRes.data.filter(c => c.status === 'closed'))
+      setCars(carsRes.data.filter(c => c.status !== 'archived'))
+      setHistoryCars(carsRes.data.filter(c => c.status === 'archived'))
       setJobMasters(jobsRes.data)
     } catch (err) {
       console.error(err)
@@ -126,8 +126,6 @@ export default function AdvisorPanel() {
         carModel: form.carModel || 'N/A',
         regNumber: form.regNumber,
         phoneNumber: form.phone,
-        needsAlignment: form.needsAlignment,
-        needsWashing: form.needsWashing
       })
       createdCarId = data.car._id
 
@@ -137,6 +135,7 @@ export default function AdvisorPanel() {
         if (jobTemplate) {
           await axios.post(`/api/admin/cars/${createdCarId}/stages`, {
             stageName: jobTemplate.title,
+            category: jobTemplate.category,
             estimatedMinutes: jobTemplate.estimatedMinutes
           })
         }
@@ -144,7 +143,7 @@ export default function AdvisorPanel() {
 
       showToast('Vehicle registered and jobs added!')
       setShowAdd(false)
-      setForm({ customerName: '', carModel: '', regNumber: '', phone: '', needsAlignment: false, needsWashing: false, selectedJobs: [] })
+      setForm({ customerName: '', carModel: '', regNumber: '', phone: '', selectedJobs: [] })
       fetchCars()
     } catch (err) {
       // If stage creation failed AFTER car was created, rollback the car
@@ -176,8 +175,8 @@ export default function AdvisorPanel() {
 
   const closeJobCard = async (carId) => {
     try {
-      await axios.put(`/api/admin/cars/${carId}/status`, { status: 'closed' })
-      showToast('Job card successfully closed and archived.')
+      await axios.put(`/api/admin/cars/${carId}/status`, { status: 'archived' })
+      showToast('Job card successfully closed and delivered.')
       fetchCars()
     } catch (err) {
       showToast('Error closing job card', false)
@@ -201,8 +200,6 @@ export default function AdvisorPanel() {
       carModel:       car.carModel,
       regNumber:      car.regNumber,
       phoneNumber:    car.phoneNumber || '',
-      needsAlignment: car.needsAlignment,
-      needsWashing:   car.needsWashing,
       addJobId: '',   // selected job from dropdown to add
     })
   }
@@ -230,6 +227,7 @@ export default function AdvisorPanel() {
     try {
       await axios.post(`/api/admin/cars/${editCar._id}/stages`, {
         stageName: jobTemplate.title,
+        category: jobTemplate.category,
         estimatedMinutes: jobTemplate.estimatedMinutes
       })
       showToast(`"${jobTemplate.title}" added!`)
@@ -698,16 +696,6 @@ export default function AdvisorPanel() {
               <input placeholder="Customer Name *" value={form.customerName} onChange={e => setForm(p => ({ ...p, customerName: e.target.value }))} style={{ padding: '10px', borderRadius: 8, border: '1px solid #CBD5E1', width: '100%', background: '#F8FAFC' }} />
               <input placeholder="Phone" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} style={{ padding: '10px', borderRadius: 8, border: '1px solid #CBD5E1', width: '100%', background: '#F8FAFC' }} />
 
-              <div style={{ display: 'flex', gap: 20, alignItems: 'center', marginTop: 5 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', color: '#475569', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={form.needsAlignment} onChange={e => setForm(p => ({ ...p, needsAlignment: e.target.checked }))} />
-                  Needs Alignment
-                </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', color: '#475569', cursor: 'pointer' }}>
-                  <input type="checkbox" checked={form.needsWashing} onChange={e => setForm(p => ({ ...p, needsWashing: e.target.checked }))} />
-                  Needs Washing
-                </label>
-              </div>
 
               <div style={{ marginTop: 10 }}>
                 <p style={{ margin: '0 0 10px', fontWeight: 500, fontSize: '0.85rem', color: '#0F172A' }}>Select Jobs </p>
@@ -779,16 +767,6 @@ export default function AdvisorPanel() {
                     />
                   </div>
                 ))}
-                <div style={{ display: 'flex', gap: '1.5rem' }}>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', cursor: 'pointer', color: '#334155' }}>
-                    <input type="checkbox" checked={!!editForm.needsAlignment} onChange={e => setEditForm(f => ({ ...f, needsAlignment: e.target.checked }))} />
-                    Needs Alignment
-                  </label>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.85rem', cursor: 'pointer', color: '#334155' }}>
-                    <input type="checkbox" checked={!!editForm.needsWashing} onChange={e => setEditForm(f => ({ ...f, needsWashing: e.target.checked }))} />
-                    Needs Washing
-                  </label>
-                </div>
               </form>
 
               {/* ── Jobs Section ── */}

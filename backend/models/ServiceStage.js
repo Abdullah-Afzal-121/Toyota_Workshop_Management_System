@@ -4,6 +4,7 @@ const ServiceStageSchema = new mongoose.Schema(
   {
     carId:              { type: mongoose.Schema.Types.ObjectId, ref: 'Car', required: true },
     stageName:          { type: String, required: true, trim: true },
+    category:           { type: String, default: 'General' },
     isCompleted:        { type: Boolean, default: false },
     order:              { type: Number, required: true },
     startedAt:          { type: Date,   default: null },

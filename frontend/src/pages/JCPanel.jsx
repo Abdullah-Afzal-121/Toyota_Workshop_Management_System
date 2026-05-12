@@ -72,7 +72,7 @@ export default function JCPanel() {
         axios.get('/api/admin/cars'), // IMPORTANT: Updated from /api/cars/all
         axios.get('/api/admin/staff')
       ])
-      setCars(carsRes.data.filter(c => c.status !== 'closed'))
+      setCars(carsRes.data.filter(c => c.status !== 'archived'))
       setMechanics(staffRes.data.filter(s => s.role === 'mechanic' || s.role === 'technician'))
     } catch (err) {
       console.error(err)
@@ -145,7 +145,6 @@ export default function JCPanel() {
   // Derived KPIs
   const receptionCount = cars.filter(c => c.status === 'pending').length
   const inProgressCount = cars.filter(c => c.status === 'in-service').length
-  const alignWashCount = cars.filter(c => c.needsAlignment || c.needsWashing).length
   const readyCount = cars.filter(c => c.status === 'ready').length
 
   return (
@@ -194,7 +193,6 @@ export default function JCPanel() {
         <div className="tw-stats-grid" style={{ marginBottom: '2rem' }}>
           <StatBox value={receptionCount} label="Reception" valueColor="#2563EB" />
           <StatBox value={inProgressCount} label="In Progress" valueColor="#D97706" />
-          <StatBox value={alignWashCount} label="Alignment / Wash" valueColor="#9333EA" />
           <StatBox value={readyCount} label="Ready" valueColor="#16A34A" />
         </div>
 
