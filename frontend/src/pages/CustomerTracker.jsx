@@ -322,11 +322,13 @@ export default function CustomerTracker() {
               </div>
               <div>
                 <div style={{ color: '#fff', fontWeight: 700, lineHeight: 1.2 }}>
-                  {data.car.carModel}
+                  {data.car.carModel && data.car.carModel !== 'N/A' ? data.car.carModel : data.car.regNumber}
                 </div>
-                <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', fontFamily: 'monospace' }}>
-                  {data.car.regNumber}
-                </div>
+                {data.car.carModel && data.car.carModel !== 'N/A' && (
+                  <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', fontFamily: 'monospace' }}>
+                    {data.car.regNumber}
+                  </div>
+                )}
               </div>
             </div>
             <div className="d-flex align-items-center gap-2">

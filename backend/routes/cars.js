@@ -9,7 +9,7 @@ const ServiceStage = require('../models/ServiceStage');
  */
 router.get('/:regNumber', async (req, res) => {
   try {
-    const car = await Car.findOne({ regNumber: req.params.regNumber.toUpperCase() });
+    const car = await Car.findOne({ regNumber: req.params.regNumber.toUpperCase() }).sort({ createdAt: -1 });
     if (!car) return res.status(404).json({ message: 'Car not found. Check your registration number.' });
 
     // ── Verification: Name + Phone must match ──
@@ -57,7 +57,7 @@ router.post('/:regNumber/feedback', async (req, res) => {
     if (!rating || rating < 1 || rating > 5) {
       return res.status(400).json({ message: 'Rating must be a number between 1 and 5.' });
     }
-    const car = await Car.findOne({ regNumber: req.params.regNumber.toUpperCase() });
+    const car = await Car.findOne({ regNumber: req.params.regNumber.toUpperCase() }).sort({ createdAt: -1 });
     if (!car) return res.status(404).json({ message: 'Car not found.' });
     if (car.status !== 'ready') {
       return res.status(400).json({ message: 'Feedback can only be submitted once the car is marked as Ready.' });

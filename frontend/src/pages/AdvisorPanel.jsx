@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
-import { PlusCircle, Search, Menu, UserCircle2, LogOut, CheckCircle2, ChevronRight, X, User, AlertCircle, Car, LayoutGrid, List, Pencil, Trash2 } from 'lucide-react'
+import { PlusCircle, Search, Menu, UserCircle2, LogOut, CheckCircle2, ChevronRight, X, User, AlertCircle, Car, Pencil, Trash2 } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { Spinner } from 'react-bootstrap'
@@ -53,7 +53,7 @@ export default function AdvisorPanel() {
   const [cars, setCars] = useState([])
   const [historyCars, setHistoryCars] = useState([])
   const [activeTab, setActiveTab] = useState('active') // 'active' or 'history'
-  const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
+
   const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState(null)
   const [dismissedStoppages, setDismissedStoppages] = useState(new Set())
@@ -342,22 +342,7 @@ export default function AdvisorPanel() {
             </button>
           </div>
           
-          <div className="d-none d-md-flex" style={{ gap: '4px', background: '#F1F5F9', padding: '4px', borderRadius: '8px', marginBottom: '4px' }}>
-            <button 
-              onClick={() => setViewMode('grid')}
-              style={{ display: 'flex', alignItems: 'center', padding: '6px', background: viewMode === 'grid' ? '#fff' : 'transparent', border: 'none', borderRadius: '4px', boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: viewMode === 'grid' ? '#0F172A' : '#94A3B8', cursor: 'pointer' }}
-              title="Grid View"
-            >
-              <LayoutGrid size={16} />
-            </button>
-            <button 
-              onClick={() => setViewMode('list')}
-              style={{ display: 'flex', alignItems: 'center', padding: '6px', background: viewMode === 'list' ? '#fff' : 'transparent', border: 'none', borderRadius: '4px', boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: viewMode === 'list' ? '#0F172A' : '#94A3B8', cursor: 'pointer' }}
-              title="List View"
-            >
-              <List size={16} />
-            </button>
-          </div>
+
         </div>
 
         {loading ? <Spinner animation="border" /> : activeTab === 'active' ? (
@@ -640,8 +625,12 @@ export default function AdvisorPanel() {
                       <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', marginBottom: 4 }}>{car.regNumber}</div>
                       <div style={{ fontSize: '0.8rem', color: '#64748B', display: 'flex', flexWrap: 'wrap', gap: '4px 8px', alignItems: 'center' }}>
                         <span style={{display: 'flex', alignItems: 'center'}}><User size={12} style={{marginRight: 4}}/>{car.customerName}</span>
-                        <span style={{ color: '#CBD5E1' }}>|</span>
-                        <span>{car.carModel}</span>
+                        {car.carModel && car.carModel !== 'N/A' && (
+                          <>
+                            <span style={{ color: '#CBD5E1' }}>|</span>
+                            <span>{car.carModel}</span>
+                          </>
+                        )}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: 6, fontWeight: 500 }}>
                         {new Date(car.createdAt).toLocaleDateString()}

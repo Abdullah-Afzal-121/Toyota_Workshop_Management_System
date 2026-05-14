@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import axios from 'axios'
 import { Spinner } from 'react-bootstrap'
-import { Wrench, CheckCircle2, RefreshCw, AlertCircle, Play, MessageSquare, X } from 'lucide-react'
+import { Wrench, CheckCircle2, RefreshCw, AlertCircle, Play, MessageSquare, X, LayoutGrid, List, User } from 'lucide-react'
 import { io } from 'socket.io-client'
 
 function formatStopwatch(sec) {
@@ -16,6 +16,9 @@ function formatStopwatch(sec) {
 
 export default function MechanicPanel() {
   const [cars, setCars] = useState([])
+  const [historyCars, setHistoryCars] = useState([])
+  const [activeTab, setActiveTab] = useState('active') // 'active' or 'history'
+  const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -38,7 +41,8 @@ export default function MechanicPanel() {
     setError(null)
     try {
       const { data } = await axios.get('/api/mechanic/cars')
-      setCars(data)
+      setCars(data.filter(c => c.status !== 'archived' && c.status !== 'closed'))
+      setHistoryCars(data.filter(c => c.status === 'archived' || c.status === 'closed'))
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load assigned jobs.')
     } finally {
@@ -111,9 +115,44 @@ export default function MechanicPanel() {
           <h2 style={{ fontWeight: 800, fontSize: '1.6rem', color: '#0F172A', marginBottom: 4 }}>Technician Panel</h2>
           <p style={{ color: '#64748B', margin: 0, fontSize: '0.9rem' }}>Full job card view — your stages are interactive, others are read-only.</p>
         </div>
-        <button onClick={fetchCars} className="tw-btn-ghost d-flex align-items-center gap-2" style={{ borderRadius: 9, padding: '7px 14px', fontSize: '0.83rem' }}>
+        <button onClick={() => fetchCars()} className="tw-btn-ghost d-flex align-items-center gap-2" style={{ borderRadius: 9, padding: '7px 14px', fontSize: '0.83rem' }}>
           <RefreshCw size={14} /> Refresh
         </button>
+      </div>
+
+      {/* Tabs and Controls */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #E2E8F0', marginBottom: '2rem' }}>
+        <div style={{ display: 'flex', gap: '1rem' }}>
+          <button 
+            onClick={() => setActiveTab('active')}
+            style={{ padding: '0.75rem 1rem', background: 'none', border: 'none', borderBottom: activeTab === 'active' ? `3px solid #EB0A1E` : '3px solid transparent', color: activeTab === 'active' ? '#EB0A1E' : '#64748B', fontWeight: 700, cursor: 'pointer', marginBottom: '-2px' }}
+          >
+            Active Vehicles ({cars.length})
+          </button>
+          <button 
+            onClick={() => setActiveTab('history')}
+            style={{ padding: '0.75rem 1rem', background: 'none', border: 'none', borderBottom: activeTab === 'history' ? `3px solid #EB0A1E` : '3px solid transparent', color: activeTab === 'history' ? '#EB0A1E' : '#64748B', fontWeight: 700, cursor: 'pointer', marginBottom: '-2px' }}
+          >
+            Service History ({historyCars.length})
+          </button>
+        </div>
+        
+        <div className="d-none d-md-flex" style={{ gap: '4px', background: '#F1F5F9', padding: '4px', borderRadius: '8px', marginBottom: '4px' }}>
+          <button 
+            onClick={() => setViewMode('grid')}
+            style={{ display: 'flex', alignItems: 'center', padding: '6px', background: viewMode === 'grid' ? '#fff' : 'transparent', border: 'none', borderRadius: '4px', boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: viewMode === 'grid' ? '#0F172A' : '#94A3B8', cursor: 'pointer' }}
+            title="Grid View"
+          >
+            <LayoutGrid size={16} />
+          </button>
+          <button 
+            onClick={() => setViewMode('list')}
+            style={{ display: 'flex', alignItems: 'center', padding: '6px', background: viewMode === 'list' ? '#fff' : 'transparent', border: 'none', borderRadius: '4px', boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.1)' : 'none', color: viewMode === 'list' ? '#0F172A' : '#94A3B8', cursor: 'pointer' }}
+            title="List View"
+          >
+            <List size={16} />
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -122,19 +161,20 @@ export default function MechanicPanel() {
         </div>
       )}
 
-      {!error && cars.length === 0 && (
-        <div className="tw-card text-center" style={{ padding: '3rem 2rem' }}>
-          <div style={{ width: 60, height: 60, borderRadius: 16, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-            <Wrench size={26} color="#94A3B8" />
-          </div>
-          <p style={{ fontWeight: 600, color: '#475569', marginBottom: 4 }}>No tasks assigned</p>
-          <p style={{ color: '#94A3B8', fontSize: '0.82rem', margin: 0 }}>Waiting for Job Controller allocation.</p>
-        </div>
-      )}
-
-      <div className="row g-4">
-        {cars.map((car) => (
-          <div key={car._id} className="col-12 col-xl-6">
+      {activeTab === 'active' ? (
+        <>
+          {!error && cars.length === 0 && (
+            <div className="tw-card text-center" style={{ padding: '3rem 2rem' }}>
+              <div style={{ width: 60, height: 60, borderRadius: 16, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
+                <Wrench size={26} color="#94A3B8" />
+              </div>
+              <p style={{ fontWeight: 600, color: '#475569', marginBottom: 4 }}>No tasks assigned</p>
+              <p style={{ color: '#94A3B8', fontSize: '0.82rem', margin: 0 }}>Waiting for Job Controller allocation.</p>
+            </div>
+          )}
+          <div className="row g-4">
+            {cars.map((car) => (
+              <div key={car._id} className={viewMode === 'grid' ? "col-12 col-xl-6" : "col-12"}>
             <div className="tw-card" style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
 
               {/* Car Header */}
@@ -362,6 +402,69 @@ export default function MechanicPanel() {
           </div>
         ))}
       </div>
+        </>
+        ) : (
+          <div className="row g-4">
+            {historyCars.length === 0 && (
+              <div className="col-12 text-center" style={{ padding: '3rem 2rem' }}>
+                <p style={{ color: '#94A3B8', fontSize: '0.82rem', margin: 0 }}>No service history found for your assigned jobs.</p>
+              </div>
+            )}
+            {historyCars.map(car => (
+              <div key={car._id} className={viewMode === 'grid' ? "col-12 col-xl-6" : "col-12"}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '1.25rem', background: '#fff', border: '1px solid #E2E8F0', borderRadius: 12, boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, minWidth: 0 }}>
+                      <div style={{ width: 44, height: 44, borderRadius: 10, background: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748B', flexShrink: 0 }}>
+                        <Wrench size={24} />
+                      </div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0F172A', marginBottom: 4 }}>{car.regNumber}</div>
+                        <div style={{ fontSize: '0.8rem', color: '#64748B', display: 'flex', flexWrap: 'wrap', gap: '4px 8px', alignItems: 'center' }}>
+                          <span style={{display: 'flex', alignItems: 'center'}}><User size={12} style={{marginRight: 4}}/>{car.customerName}</span>
+                          {car.carModel && car.carModel !== 'N/A' && (
+                            <>
+                              <span style={{ color: '#CBD5E1' }}>|</span>
+                              <span>{car.carModel}</span>
+                            </>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.75rem', color: '#64748B', marginTop: 6, fontWeight: 500 }}>
+                          {new Date(car.createdAt).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ flexShrink: 0 }}>
+                      <span style={{ color: '#475569', background: '#F1F5F9', border: '1px solid #E2E8F0', padding: '6px 14px', borderRadius: 20, fontSize: '0.7rem', fontWeight: 800, letterSpacing: '0.05em' }}>BILLED / CLOSED</span>
+                    </div>
+                  </div>
+
+                  {car.stages && car.stages.length > 0 && (
+                    <div style={{ marginTop: 4 }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', marginBottom: 8 }}>Service Log</div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                        {car.stages.map(stage => (
+                          <div key={stage._id} style={{ 
+                            padding: '4px 10px', borderRadius: 20, fontSize: '0.7rem', fontWeight: 600,
+                            background: stage.isMyStage ? '#EFF6FF' : '#F8FAFC', 
+                            border: `1px solid ${stage.isMyStage ? '#BFDBFE' : '#E2E8F0'}`, 
+                            color: stage.isMyStage ? '#1D4ED8' : '#334155',
+                            display: 'flex', alignItems: 'center', gap: 6
+                          }}>
+                            <span>{stage.stageName}</span>
+                            <span style={{ paddingLeft: 6, borderLeft: `1px solid ${stage.isMyStage ? '#BFDBFE' : '#E2E8F0'}`, color: '#64748B' }}>
+                              {stage.assignedTechnician ? stage.assignedTechnician.name : 'N/A'}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
       {/* Remark Modal */}
       {activeStageForRemark && (
